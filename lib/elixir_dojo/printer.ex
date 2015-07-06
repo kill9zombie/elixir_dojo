@@ -7,8 +7,8 @@ defmodule ElixirDojo.Printer do
 
   """
 
-  @character "="
   @timeout 1000
+  @output_file Application.get_env(:elixir_dojo, :output_file)
 
   ###
   # External API
@@ -26,40 +26,56 @@ defmodule ElixirDojo.Printer do
   print the list, ie: 
   
     ElixirDojo.Printer.print([0,0,1,1,1])
+
+  This adds the list to the stack of things to print.
+  We print a line once a second.
   """
-  def print(list) do
+  def print(pid, list) do
     data = list |> Enum.map_join &character_map(&1)
-    GenServer.cast(__MODULE__, [data])
+    GenServer.cast(pid, {:push, data})
+  end
+
+  def stop(pid) do
+    GenServer.cast(pid, :stop)
   end
 
   defp character_map(0), do: " "
-  defp character_map(1), do: @character
+  defp character_map(1), do: "="
 
   ###
   # GenServer callbacks
   #
 
   def init(_opts) do
-    Process.flags({:trap_exit, true})
+    Process.flag(:trap_exit, true)
     {:ok, file} = File.open @output_file, [:write]
-    {:ok, %{file: file}, 1000}
-  end
-
-  def handle_cast(msg, %{file: file, data: data}) do
-    {:noreply, %{file: file, data: [msg|data]}}
+    {:ok, %{file: file, data: []}, @timeout}
   end
 
 
-  def handle_info(:timeout, state = %{data: []}) do
-    Logger.debug fn -> "handle_info: nothing to write" end
-    {:noreply, state}
+  def handle_cast({:push, msg}, state = %{file: file, data: []}) do
+    {:noreply, state, @timeout}
+  end
+
+  def handle_cast({:push, msg}, %{file: file, data: data}) do
+    Logger.debug fn -> "Adding #{inspect msg} to the buffer" end
+    {:noreply, %{file: file, data: Enum.reverse(data, msg)}, @timeout}
+  end
+
+  def handle_cast(:stop, state) do
+    {:stop, :normal}
+  end
+
+
+  def handle_info(:timeout, state = %{file: file, data: []}) do
+    {:noreply, state, @timeout}
   end
 
   def handle_info(:timeout, state = %{file: file, data: data}) do
-    Logger.debug fn -> "handle_info: writing data" end
     [head|tail] = data
+    Logger.debug fn -> "handle_info: writing: #{head}" end
     IO.binwrite file, head
-    {:noreply, state}
+    {:noreply, %{file: file, data: tail}, @timeout}
   end
 
   def terminate(msg, state = %{file: file}) do

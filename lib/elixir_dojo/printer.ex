@@ -54,7 +54,8 @@ defmodule ElixirDojo.Printer do
 
 
   def handle_cast({:push, msg}, state = %{file: file, data: []}) do
-    {:noreply, state, @timeout}
+    Logger.debug fn -> "Adding #{inspect msg} to the buffer" end
+    {:noreply, %{file: file, data: [msg]}, @timeout}
   end
 
   def handle_cast({:push, msg}, %{file: file, data: data}) do
@@ -63,7 +64,7 @@ defmodule ElixirDojo.Printer do
   end
 
   def handle_cast(:stop, state) do
-    {:stop, :normal}
+    {:stop, :normal, state}
   end
 
 
@@ -73,15 +74,15 @@ defmodule ElixirDojo.Printer do
 
   def handle_info(:timeout, state = %{file: file, data: data}) do
     [head|tail] = data
-    Logger.debug fn -> "handle_info: writing: #{head}" end
+    Logger.debug fn -> "handle_info: writing: #{inspect head}" end
     IO.binwrite file, head
     {:noreply, %{file: file, data: tail}, @timeout}
   end
 
-  def terminate(msg, state = %{file: file}) do
-    Logger.warn fn -> "Terminating" end
+  def terminate(reason, state = %{file: file}) do
+    Logger.warn fn -> "Terminating: #{inspect reason}" end
     File.close file
-    {:ok, state}
+    :ok
   end
 
 end

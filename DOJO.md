@@ -20,32 +20,87 @@ Private functions
 -----------------
 
 We can define private functions with 'defp'.  Define a function that takes a parameter and returns it before the word "rats".
-For example "#{foo} rats".
+For example "#{inspect foo} rats".
 
 Pipe operator
 -------------
 
 The pipe operator is simplar to F#, it will supply the first argument to the next function in the chain.
-For example:
+For example, the documentation for Enum.reverse states:
+
+    reverse(collection) 	Reverses the collection
+
+.. which means that we can call it with the pipe operator as:
+
     [1,2,3,4] |> Enum.reverse
 
+Or to fetch the 3rd element in the list:
+    [1,2,3,4] |> Enum.fetch(2)
+
+You can think of a pipe as marking points where we transform data.  Modify your private function to capitalise the first character of the returned string (see String.capitalize).
+ 
+Lists, tuples, maps
+-------------------
+
+Lists can grow, tuples cannot.  Maps are similar to hashes or dictionaries in other languages.
+
+Write a function that takes two integer arguments (use a guard here) and returns them as a list.
+
+What happens if you don't pass an integer? It crashes!  This is a good thing.  Part of the Erlang/Elixir thing is to stop errors getting too far into the system.  The general idea is that you code for what you want, anything else should cause your module to fail.
 
 
+The string thing
+----------------
 
-Functions defined 
+With Erlang coming from a telecoms background, string handling isn't a strong point.  Strings come in two flavours, the first is a list of ascii values.
 
-* Private functions
-* Pipe operator
+In Elixir, this is represented by single quotes:
 
-* Lists, tuples, maps
-* The string thing
+    'abc' is the same as [10, 11, 12]
+
+The other representation is as a binary string.  This tends to be the most used string type.  Elixir can pattern match arbitrary bytes in 
+
+## FIXME
+
 * Module attributes
 
 * Pattern matching
 * Recursion
 
-* Docs (ie. h MyMod.function)
-* Doctests
+Documentation (ie. h MyMod.function)
+-------------
+
+Documentation in Elixir is a first class citizen (surprise surpirise, in a modern language).  We can add documentation to modules and functions with `@moduledoc` and `@doc`.
+
+Add a @doc section to your "cats" function, ie:
+
+    @doc ~S"""
+    My Cat
+    """
+    def cat do
+      "cats"
+    end
+
+Now you can get some help from the shell:
+
+    iex> h Enum
+
+.. will give you the `@moduledoc` from the Enum module.  Do the same for your module and function.
+
+Doctests
+--------
+
+If you add an example with the `iex` prompt, you can run a test on it.
+
+    @doc ~S"""
+    My Cat
+
+    Example:
+        iex> MyModule.cat
+        "cats"
+    """
+
+
 
 * GenServers
 * Supervisors

@@ -135,7 +135,7 @@ The `=` operator in Elixir is a bit different to what we're used to.  Try to thi
     iex> 1 = x
     1
 
-So far so good, x /is/ equal to 1, so it's all good.  What happens if we try another test?
+So far so good, x _is_ equal to 1, so it's all good.  What happens if we try another test?
 
     iex> 2 = x
     ** (MatchError) no match of right hand side value: 1
@@ -211,7 +211,7 @@ Now you can get some help from the shell:
 Pipe operator
 -------------
 
-The pipe operator is similar to F# but it will supply the first argument to the next function in the chain, not the last (<ackbar>It's a trap!</ackbar>).
+The pipe operator is similar to F# but it will supply the first argument to the next function in the chain, not the last (`<ackbar>It's a trap!</ackbar>`).
 
 For example, the documentation for Enum.reverse states:
 
@@ -229,13 +229,18 @@ You can think of a pipe as marking points where we transform data.
 Let's build a MUD
 -----------------
 
+Oh, iex has tab complete for module and function names, how cool is that?
+If you want to find out which functions the `String` module has, just type `String.<tab>`.
+Erlang and Elixir tends to list the arity of the function (how many parameters the function takes).
+If you want to see more, just type `h String.strip` for example.
+
 Ok, let's have a go at a really basic MUD.  First create a new project with a supervision tree:
 
     mix new game --sup
 
 The first thing to do is to make a `lib/game` directory.  Grab the `*.ex` from the skeleton project, they go in your new `lib/game` directory.  
 
-* board.ex
+* lib/game/board.ex
 
 This will represent the 2d game board.  You'll need to come up with some better descriptions, my rooms are probarbly pretty lame.  Let's try the Agent.
 
@@ -258,13 +263,14 @@ This will represent the 2d game board.  You'll need to come up with some better 
     {:ok, "eight"}
     iex(4)> 
 
-A #PID is a process ID.  Whenever we spawn a process or start and OTP managed process, we get a process ID.  If we want to interact with the process, we'll need to keep it.  If we're just interested in the side effects of the process, maybe not.
+A #PID is a process ID.  Whenever we spawn a process or start an OTP managed process, we get a process ID.  If we want to interact with the process, we'll need to keep it.  If we're just interested in the side effects of the process, maybe not.  In this case, `Game.Board.start_link` returns `{:ok, pid}` so that it can be managed by an OTP supervisor.
 
 The main board is defined in the `newboard` function.
 
-Oh, iex has tab complete for module and function names.
 
-Now let's setup our supervision tree (quit iex first with ctrl+c, ctrl+c).  Your `lib/game.ex` file defines the supervisor, we need to add the following workers:
+* lib/game.ex
+
+Now let's setup our supervision tree (quit iex first with ctrl+c, ctrl+c).  Your `lib/game.ex` file defines the supervisor. `mix` will have given you an empty supervisor skeleton, we need to add the following workers and a task supervisor:
 
     defmodule Game do
       use Application
@@ -278,7 +284,7 @@ Now let's setup our supervision tree (quit iex first with ctrl+c, ctrl+c).  Your
           # Define workers and child supervisors to be supervised
           supervisor(Task.Supervisor, [[name: Game.TaskSupervisor]]),
           worker(Game.Board, []),
-          worker(Game.PlayerPosition, []),
+          worker(Game.Player, []),
           worker(Task, [Game.Listener, :acceptor, []])
         ]
     
@@ -301,22 +307,23 @@ Same for the other three directions (south, east and west).
 Player position
 ---------------
 
-Now that we know where the player is, we should be able to keep their position across sessions. The PlayerPosition and Board Agents are still running even when our acceptor processs isn't.
+Now that we know where the player is, we should be able to keep their position across sessions. The Player and Board Servers are still running even when our acceptor processs isn't.  Welcome the player back if they're already registered.
 
 Other Players
 -------------
 
 Can we register more than one player in the game?  If another player's in the same room as us, we want to know who's there.
 
+Special skills
+--------------
+
+Players may be able to collect special skills as they travel about.
+
 Chat
 ----
 
 If another player's in the same room as us, can we chat to the other player?  Getting messages between processes is easy, as long as you know the pid; and the other process is listening.
 
-Special skills
---------------
-
-Players may be able to collect special skills as they travel about.
 
 Lots of extra stuff
 -------------------

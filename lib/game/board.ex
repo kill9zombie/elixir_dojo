@@ -1,9 +1,6 @@
 defmodule Game.Board do
   require Logger
 
-  @player_map_key :player_map
-  @board_key :board
-  
   @doc """
   Starts a new game.
   """
@@ -16,7 +13,7 @@ defmodule Game.Board do
   """
   def newboard do
     [
-      ["one", "two" ,"three"],
+      ["You have reached the edge of the forrest.", "two" ,"three"],
       ["four","five","six"],
       ["seven", "eight", "nine"]
     ]
@@ -36,12 +33,12 @@ defmodule Game.Board do
   def room({row, _column}) when row < 0, do: {:error, :bad_position}
   def room({_row, column}) when column < 0, do: {:error, :bad_position}
   def room({row, column}) do
-    Logger.debug fn -> "Fetching row: #{inspect row} column: #{inspect column}" end
+    Logger.debug fn -> "#{__MODULE__} Fetching row: #{inspect row} column: #{inspect column}" end
     Agent.get(__MODULE__, fn(board) ->
       board |> Enum.at(row,[]) |>  Enum.at(column)
-    end) |> _room
+    end) |> do_room
   end
-  defp _room(nil), do: {:error, :bad_position}
-  defp _room(text), do: {:ok, text}
+  defp do_room(nil), do: {:error, :bad_position}
+  defp do_room(text), do: {:ok, text}
 
 end

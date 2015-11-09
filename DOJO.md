@@ -53,12 +53,63 @@ Create a function `Dojo.Actor.add` that takes two integer arguments and adds the
       end
     end
 
-Now start iex (interactive Elixir) with `iex -S mix`.
+Now start iex (interactive Elixir) with `iex -S mix`.  Here's the output we're expecting:
 
-If you come from Ruby, you'll recognise the `"#{var}"` syntax.  If you've added a `@doc` to your function, try `h Dojo.Actor.add` in iex.
+    iex(1)> Dojo.Actor.add(1,2)
+    3
+    iex(2)> 
+
+Exit iex with crtl+c, ctrl+c.
+
+Just as a side note, if you come from Ruby, you'll recognise the `"#{var}"` syntax.  This is how we include variables in strings.  If you've added a `@doc` to your function, try `h Dojo.Actor.add` in iex.
 
 Don't forget to recompile your module if you make changes.  You can either quit iex with ctrl+c, ctrl+c, it'll recompile when you start iex; or you can use `r(Dojo.Actor)`.
 
+The Actor Model
+---------------
+
+There's a reason we called our module `Actor`.  Erlang (and by extension Elixir) has a very strong actor model.  All Elixir code runs in an Elixir process.  This is a very lightweight process inside the Erlang VM, not an operating system process.  This means we don't have the usual problems with threading (locking or sharing memory).  The only way to talk to another process is to send messages.  It does seem like a good idea, there's probably an actor model in your normal language (Orleans, Akka etc).
+
+One of the reasons I started looking at Erlang and Elixir was because processors aren't getting faster.  We're getting lots more cores, so we need to learn how to program in a concurrent system.  This is something that Erlang has been doing for years, and now we have a Ruby-esque language that runs on this solid VM.  Let's have a look.
+
+Here's an example from [elixir-lang.org](http://elixir-lang.org):
+
+    parent = self()
+    
+    # Spawns an Elixir process (not an operating system one!)
+    spawn_link(fn ->
+      send parent, {:msg, "hello world"}
+    end)
+    
+    # Block until the message is received
+    receive do
+      {:msg, contents} -> IO.puts contents
+    end
+
+The `self()` call will return the current process' process ID (or PID).  We then spawn another Elixir process that's linked to our process with `spawn_link`.  What this means is that if our new child process crashes, we crash too.  Then we start blocking and wait for messages coming back to us.  If the received message matches the pattern `{:msg, contents}` (more on this later) then we'll print the output to the console.  The spawned process just sends a message back to the parent.
+
+Add the following function to the `lib/dojo.ex` file:
+
+    defmodule Dojo do
+    
+      @doc """
+      Spawn a process to add two numbers together.
+      """
+      def actortest(x, y) do
+        pid = self()
+        spawn_link(fn ->
+          Dojo.Actor.add(x, y, pid)
+        end)
+        
+        receive do
+          {:msg, result} -> result
+        end
+      end
+    
+    end
+
+Now create a `Dojo.Actor.add/3` function to send the result back as a message.  You'll see this syntax a lot, it just signifies the arity (number of parameters) of the function.  You can leave your `Dojo.Actor.add/2` function as it is.  Try `Dojo.Actor.actortest/2` in iex.  It even has tab complete for modules and function names.
+ 
 Numbers, lists, tuples and maps etc
 -----------------------------------
 
@@ -73,7 +124,7 @@ Numbers, strings and atoms:
     iex> :hello
     :hello
 
-Atoms are the same as symbols in other languages.
+Atoms are the same as symbols in other languages.  Almost like a constant, but without needing to be tied to anything.
 
 Lists typically hold a fixed number of items (may be different types):
 
@@ -123,8 +174,14 @@ The other representation is as a binary string.  This tends to be the most used 
     iex> "hello"
     "hello"
 
+With Elixir's Ruby influence comes the amazing String module.  Try some of the String functions in iex (remember you can tab complete).  If you want help, just do `h String.<function name>`, for example:
+
+    iex> h String.upcase
+
 Pattern matching
 ----------------
+
+Pattern matching is everywhere in Elixir.  You've already seen some in our receive block while waiting for messages.
 
 The `=` operator in Elixir is a bit different to what we're used to.  Try to think of it as an equality test, for example:
 
@@ -140,7 +197,20 @@ So far so good, x _is_ equal to 1, so it's all good.  What happens if we try ano
     iex> 2 = x
     ** (MatchError) no match of right hand side value: 1
 
-Yay, thanks Elixir.  2 doesn't match x, so we got an error.  This is a good thing.  We can use pattern matching to match data structures too:
+Yay, thanks Elixir.  2 doesn't match x, so we got an error.  This is a good thing.  The rules are that if a variable is 'unbound' and we pattern match, we'll bind a value to the variable.  Elixir does allow re-binding variables within a function, but we can use the pin operator (`^`) to avoid this:
+
+    iex> x = 1
+    1
+    iex> ^x = 2
+    ** (MatchError) no match of right hand side value: 2
+    iex> {y, ^x} = {2, 1}
+    {2, 1}
+    iex> y
+    2
+    iex> {y, ^x} = {2, 2}
+    ** (MatchError) no match of right hand side value: {2, 2}
+
+We can use pattern matching to match data structures too:
 
     iex> [head|tail] = [1,2,3,4]
     [1, 2, 3, 4]
@@ -211,7 +281,7 @@ Now you can get some help from the shell:
 Pipe operator
 -------------
 
-The pipe operator is similar to F# but it will supply the first argument to the next function in the chain, not the last (`<ackbar>It's a trap!</ackbar>`).
+The pipe operator is similar to F# but it will supply the first argument to the next function in the chain, not the last (F# people: `<ackbar>It's a trap!</ackbar>`).
 
 For example, the documentation for Enum.reverse states:
 
@@ -228,11 +298,6 @@ You can think of a pipe as marking points where we transform data.
 
 Let's build a MUD
 -----------------
-
-Oh, iex has tab complete for module and function names, how cool is that?
-If you want to find out which functions the `String` module has, just type `String.<tab>`.
-Erlang and Elixir tends to list the arity of the function (how many parameters the function takes).
-If you want to see more, just type `h String.strip` for example.
 
 Ok, let's have a go at a really basic MUD.  First create a new project with a supervision tree:
 
@@ -265,8 +330,7 @@ This will represent the 2d game board.  You'll need to come up with some better 
 
 A #PID is a process ID.  Whenever we spawn a process or start an OTP managed process, we get a process ID.  If we want to interact with the process, we'll need to keep it.  If we're just interested in the side effects of the process, maybe not.  In this case, `Game.Board.start_link` returns `{:ok, pid}` so that it can be managed by an OTP supervisor.
 
-The main board is defined in the `newboard` function.
-
+The main board is defined in the `newboard` function.  The rows and columns are just lists.
 
 * lib/game.ex
 
@@ -299,6 +363,10 @@ Now let's setup our supervision tree (quit iex first with ctrl+c, ctrl+c).  Your
 Wandering around
 ----------------
 
+From here on in, most of our changes will be in `acceptor.ex`.  This is the process that's launched when a client connects.
+
+Telnet to port 4040 on your machine, you should be able to enter a player name and quit.
+
 Ok, our MUD isn't up to much at the moment.  Let's let our user wander round.
 
 If the user enters "north" at our direction prompt, move them north and show the new room description.
@@ -314,13 +382,15 @@ Other Players
 
 Can we register more than one player in the game?  If another player's in the same room as us, we want to know who's there.
 
-Special skills
---------------
+Collecting things
+-----------------
 
 Players may be able to collect special skills as they travel about.
 
 Chat
 ----
+
+This is a bit trickier.
 
 If another player's in the same room as us, can we chat to the other player?  Getting messages between processes is easy, as long as you know the pid; and the other process is listening.
 
@@ -328,4 +398,4 @@ If another player's in the same room as us, can we chat to the other player?  Ge
 Lots of extra stuff
 -------------------
 
-There's a lot more to the language, such a behaviours, protocols, macros etc.  Have a look at http://elixir-lang.org for more.  Jose Valim has done a [How I Start](http://www.howistart.org/posts/elixir/1) using the game Portal as an example.
+There's a lot more to the language, such a behaviours, protocols, macros etc.  Have a look at http://elixir-lang.org for more.  Jose Valim has done a [How I Start](http://www.howistart.org/posts/elixir/1) using the game Portal as an example.  Videos from the Elixir conferences have made it to [confreaks.tv](http://confreaks.tv/tags/40).

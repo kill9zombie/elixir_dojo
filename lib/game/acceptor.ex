@@ -1,7 +1,7 @@
 defmodule Game.Acceptor do
   require Logger
-  alias Game.Player
-  alias Game.Board
+  alias Game.Player, as: Player
+  alias Game.Board, as: Board
 
   #
   # The main Elixir documentation reference is here:
@@ -53,7 +53,7 @@ defmodule Game.Acceptor do
     # Get the player's position on the board and display
     # the text to the user.
     {:ok, position} = Player.position(player_name)
-    {:ok, room_text} = Board.room(position)
+    {:ok, {room_text}} = Board.room(position)
     :gen_tcp.send(socket, "#{room_text}\r\n")
     :gen_tcp.send(socket, "\r\n")
 

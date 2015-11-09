@@ -13,22 +13,43 @@ defmodule Game.Board do
   """
   def newboard do
     [
-      ["You have reached the edge of the forrest.", "two" ,"three"],
-      ["four","five","six"],
-      ["seven", "eight", "nine"]
+      [{"Edge of the forest."}, {"The cliffs of Aaaarrrrggh!"} ,{"Almscliff Crag."}, {"Edge of the forest."} ],
+      [{"Edge of the forest."}, {"Mr Foleys"} ,{"The Dojo, Hai!"}, {"Edge of the forest."} ],
+      [{"Edge of the forest."}, {"Town Hall."} ,{"Deserted Hospital."}, {"Edge of the forest."} ],
+      [{"Edge of the forest."}, {"Welcome to the forest, please go north to start your journey."} ,{"nothing here yet!"}, {"Edge of the forest."} ],
+      [{"Edge of the forest."}, {"Edge of the forest."} ,{"Edge of the forest."}, {"Edge of the forest."} ]
     ]
   end
 
   @doc"We want the start position for a new player"
   def start_position do
     # {row, column}
-    {2,1}
+    {3,1}
   end
 
-  @doc """
+  @doc ~S"""
   Find the text for a given row and column on the board.
 
-  Returns {:ok, text} if everything's ok, or {:error, :bad_position} if you've gone out of bounds.
+  Returns {:ok, {text}} if everything's ok, or {:error, :bad_position} if you've gone out of bounds.
+
+  Example (We want row 3, column 1):
+      iex> Game.Board.room({3,1})
+      {:ok, {"Welcome to the forest, please go north to start your journey."}}
+      iex>
+
+  The board looks like this:
+
+        North
+
+       0 1 2 3 ...
+      0
+      1
+      2
+      3
+      .
+      .
+        South
+
   """
   def room({row, _column}) when row < 0, do: {:error, :bad_position}
   def room({_row, column}) when column < 0, do: {:error, :bad_position}
@@ -39,6 +60,6 @@ defmodule Game.Board do
     end) |> do_room
   end
   defp do_room(nil), do: {:error, :bad_position}
-  defp do_room(text), do: {:ok, text}
+  defp do_room(term), do: {:ok, term}
 
 end

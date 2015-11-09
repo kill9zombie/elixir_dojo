@@ -136,6 +136,13 @@ Tuples typically hold a fixed number of items.  It's common to see things like `
     iex> {:ok, "hello"}
     {:ok, "hello"}
 
+Because lists of tuples with the first value as an atom is so common, Elixir has a nicer way to represent this:
+
+    iex> [{:milk, 2}, {:bread, 1}]
+    [milk: 2, bread: 1]
+
+Both of these are the same.
+
 Maps are similar to hashes or dictionaries in other languages.  If the key is an atom, then you can access the value with the dot notation.  It'll raise a KeyError if the key doesn't exist.
 
     iex> foo = %{:one => 1, :two => 2}
@@ -307,7 +314,7 @@ The first thing to do is to make a `lib/game` directory.  Grab the `*.ex` from t
 
 * lib/game/board.ex
 
-This will represent the 2d game board.  You'll need to come up with some better descriptions, my rooms are probarbly pretty lame.  Let's try the Agent.
+This will represent the 2d game board.  You'll need to come up with some better descriptions (in `Game.Board.newboard/0`), my rooms are probarbly pretty lame.  Let's try the Agent.
 
     snapper$ iex -S mix
     Erlang/OTP 17 [erts-6.3] [source] [64-bit] [smp:2:2] [async-threads:10] [hipe] [kernel-poll:false]
@@ -359,6 +366,14 @@ Now let's setup our supervision tree (quit iex first with ctrl+c, ctrl+c).  Your
       end
     end
 
+* lib/game/player.ex
+
+  This deals with players.  We can register players with the game, update their position and things in the bag they're carrying.
+
+* lib/game/listener.ex
+
+  This listens on the TCP socket and launches `Game.Acceptor.start/1`.
+
 
 Wandering around
 ----------------
@@ -367,32 +382,43 @@ From here on in, most of our changes will be in `acceptor.ex`.  This is the proc
 
 Telnet to port 4040 on your machine, you should be able to enter a player name and quit.
 
-Ok, our MUD isn't up to much at the moment.  Let's let our user wander round.
+Ok, our MUD isn't up to much at the moment.  Let's let our user wander about.
 
-If the user enters "north" at our direction prompt, move them north and show the new room description.
-Same for the other three directions (south, east and west).
+If the user enters "north" at our direction prompt, move them north , show the new room description, then wait for another command.  Same for the other three directions (south, east and west).  You can use `Game.Player.move/2` to move the player.
+
+* tip
+
+  Don't forget you have tab complete and help in the `iex` shell.
 
 Player position
 ---------------
 
-Now that we know where the player is, we should be able to keep their position across sessions. The Player and Board Servers are still running even when our acceptor processs isn't.  Welcome the player back if they're already registered.
+Now that we know where the player is, we should be able to keep their position across sessions. The Player and Board processes are still running even when our acceptor processs isn't.  Welcome the player back if they're already registered.
+
+Look at the way that `case` uses pattern matching.  We should be able to use this to make an appropriate greeting.
 
 Other Players
 -------------
 
-Can we register more than one player in the game?  If another player's in the same room as us, we want to know who's there.
+Can we register more than one player in the game?  If another player's in the same room as us, we want to know who's there.  `Game.Player.at/1` will return a list of players at a position.
 
 Collecting things
 -----------------
 
-Players may be able to collect special skills as they travel about.
+Players may be able to collect things as they travel about.  They certainly have a bag, check out `Game.Player.bag/1` and `Game.Player.add_to_bag/2`.  You'll notice that `Game.Board.room/1` returns a tuple with one value.  Now's the time to add things to rooms.  Update `Game.Board.newboard/0` and add some items.
+
+The traditional way would be something like this:
+
+    {"room description"}
+    .. becomes
+    {"room description", [{:apple, 5}, {:gold 1}]}
 
 Chat
 ----
 
 This is a bit trickier.
 
-If another player's in the same room as us, can we chat to the other player?  Getting messages between processes is easy, as long as you know the pid; and the other process is listening.
+If another player's in the same room as us, can we chat to the other player?  Getting messages between processes is easy, as long as you know the pid; and the other process is listening.  If you have time, I'd update the Player module to keep a PID in the player record, but for now we can just add a `{:pid, pid}` to the player's bag.
 
 
 Lots of extra stuff

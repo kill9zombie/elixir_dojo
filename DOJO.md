@@ -390,6 +390,21 @@ If the user enters "north" at our direction prompt, move them north , show the n
 
   Don't forget you have tab complete and help in the `iex` shell.
 
+Houston?
+--------
+
+Let's try a little experiment because yes, we have a problem.  Assuming you haven't fixed it already, what happens if a player enters a command other than north, south, east, west or quit?  Oh no, our Acceptor crashes!
+
+Try this.  Connect two clients to our game, they should use different player names.  In one of the telnet windows, send a bad command and watch it crash, leave the other at the `command>` prompt.  Keep the Elixir shell running.  Now add a drop through case statement in `acceptor.ex` (have a look at the pattern matching section if you want an example).  Just display valid options, then go back into the main loop.
+
+Once you've saved the file, reload the module with:
+
+    iex> r(Game.Acceptor)
+
+Now you should be able to telnet back in and issue a bad command.  However, our other session is still active.  We can type 'quit' and quit normally.
+
+Hello Mike; Hello Joe!
+
 Player position
 ---------------
 

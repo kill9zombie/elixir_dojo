@@ -7,12 +7,14 @@ defmodule Game.Player do
   #   The state looks something like this:
   # 
   #   [
-  #     {"jim", {2,3}, []},
-  #     {"bob", {2,5}, []}
+  #     {"jim", {2,3}, [], nil},
+  #     {"bob", {2,5}, [], nil}
   #   ]
   # 
   #   .. where "jim" and "bob" are the names of the players, followed by {row, column}
-  #   positions on the board, then any items they're carrying.
+  #   positions on the board, then any items they're carrying, then an optional pid for
+  #   the chat system.
+  #
 
   use GenServer
 
@@ -28,17 +30,17 @@ defmodule Game.Player do
   Registers a new player.
 
   If the player's already registered in the system then we'll return:
-  {:player, {player_name, {row, column}, bag}}
+  {:player, {player_name, {row, column}, bag, chat_pid}}
 
   If we've just registered a new player, we'll return:
-  {:new_player, {player_name, {row, column}, []}}
+  {:new_player, {player_name, {row, column}, [], chat_pid}}
 
   Example
 
       iex> Game.Player.register("bob")
-      {:new_player, {"bob", {2, 1}, []}}
+      {:new_player, {"bob", {3, 1}, [], nil}}
       iex> Game.Player.register("bob")
-      {:player, {"bob", {2, 1}, []}}
+      {:player, {"bob", {3, 1}, [], nil}}
 
   """
   def register(player_name) do
@@ -50,10 +52,10 @@ defmodule Game.Player do
 
   Example
 
-      iex> Game.Player.register("bob")
-      {:new_player, {"bob", {2, 1}, []}}
-      iex> Game.Player.position("bob")
-      {:ok, {2, 1}}
+      iex> Game.Player.register("jim")
+      {:new_player, {"jim", {3, 1}, [], nil}}
+      iex> Game.Player.position("jim")
+      {:ok, {3, 1}}
       iex> Game.Player.position("alice")
       {:error, :player_not_found}
 
@@ -79,7 +81,7 @@ defmodule Game.Player do
   Example:
 
       iex> Game.Player.register("carol")
-      {:new_player, {"carol", {2, 1}, []}}
+      {:new_player, {"carol", {3, 1}, [], nil}}
       iex> Game.Player.move("carol", :north)
       :ok
       iex> Game.Player.move("carol", :south)
@@ -108,12 +110,12 @@ defmodule Game.Player do
 
   Example:
 
-      iex> Game.Player.register("jim")
-      {:new_player, {"jim", {3, 1}, []}}
-      iex> Game.Player.register("bob")
-      {:new_player, {"bob", {3, 1}, []}}
+      iex> Game.Player.register("matt")
+      {:new_player, {"matt", {3, 1}, [], nil}}
+      iex> Game.Player.register("jon")
+      {:new_player, {"jon", {3, 1}, [], nil}}
       iex> Game.Player.at({3,1})
-      [{"bob", {3, 1}}, {"jim", {3, 1}}]
+      [{"matt", {3, 1}}, {"jon", {3, 1}}]
 
   """
   def at({row, column}) do
@@ -126,7 +128,7 @@ defmodule Game.Player do
   Example
 
       iex> Game.Player.register("becky")
-      {:new_player, {"becky", {3, 1}, []}}
+      {:new_player, {"becky", {3, 1}, [], nil}}
       iex> Game.Player.add_to_bag("becky", {:gold, 2})
       :ok
       iex> Game.Player.bag("becky")
@@ -142,21 +144,41 @@ defmodule Game.Player do
 
   Example
 
-      iex> Game.Player.register("becky")
-      {:new_player, {"becky", {3, 1}, []}}
-      iex> Game.Player.add_to_bag("becky", {:gold, 2})
+      iex> Game.Player.register("sue")
+      {:new_player, {"sue", {3, 1}, [], nil}}
+      iex> Game.Player.add_to_bag("sue", {:gold, 2})
       :ok
-      iex> Game.Player.bag("becky")
+      iex> Game.Player.bag("sue")
       {:ok, [gold: 2]}
   """
   def add_to_bag(player_name, term) do
     GenServer.call(__MODULE__, {:add_to_bag, player_name, term})
   end
 
+  @doc ~S"""
+  Set the pid for the chat process.
+
+  Example
+
+  """
+  def chat_pid(player_name) do
+    GenServer.call(__MODULE__, {:chat_pid, player_name})
+  end
+
+
+  @doc ~S"""
+  Get the pid for the chat process.
+
+  Example
+  """
+  def set_chat_pid(player_name, pid) do
+    GenServer.call(__MODULE__, {:set_chat_pid, player_name, pid})
+  end
+
   ## Private functions
 
   defp find_player(registry, player_name) do
-    Enum.find(registry, :no_player, fn({name, _, _}) -> name == player_name end)
+    Enum.find(registry, :no_player, fn({name, _, _, _}) -> name == player_name end)
   end
 
   # If we're going to go outside the board, then Board.room
@@ -187,9 +209,9 @@ defmodule Game.Player do
   def handle_call({:register, player_name}, _from, state) do
     {token, player_record} = case find_player(state, player_name) do
       :no_player ->
-        {:new_player, {player_name, Board.start_position, []}}
-      {player_name, position, bag} ->
-        {:player, {player_name, position, bag}}
+        {:new_player, {player_name, Board.start_position, [], nil}}
+      {player_name, position, bag, chat_pid} ->
+        {:player, {player_name, position, bag, chat_pid}}
     end
 
     {:reply, {token, player_record}, [ player_record | state ]}
@@ -199,7 +221,7 @@ defmodule Game.Player do
     case find_player(state, player_name) do
       :no_player ->
         {:reply, {:error, :player_not_found}, state}
-      {^player_name, position, _bag} ->
+      {^player_name, position, _bag, _chat_pid} ->
         {:reply, {:ok, position}, state}
     end
   end
@@ -208,15 +230,15 @@ defmodule Game.Player do
     case find_player(state, player_name) do
       :no_player ->
         {:reply, {:error, :player_not_found}, state}
-      {^player_name, position, bag} ->
-        other_players = Enum.reject(state, fn({name, _, _}) -> name == player_name end)
+      {^player_name, position, bag, chat_pid} ->
+        other_players = Enum.reject(state, fn({name, _, _, _}) -> name == player_name end)
         new_position = do_move_position(position, direction)
-        {:reply, :ok, [ {player_name, new_position, bag} | other_players ]}
+        {:reply, :ok, [ {player_name, new_position, bag, chat_pid} | other_players ]}
     end
   end
 
   def handle_call({:players_at, {row, column}}, _from, state) do
-    players = Enum.filter(state, fn({_player_name, position, _bag}) -> position == {row, column} end)
+    players = Enum.filter(state, fn({_player_name, position, _bag, _chat_pid}) -> position == {row, column} end)
     {:reply, players, state}
   end
 
@@ -224,7 +246,7 @@ defmodule Game.Player do
     case find_player(state, player_name) do
       :no_player ->
         {:reply, {:error, :player_not_found}, state}
-      {^player_name, _position, bag} ->
+      {^player_name, _position, bag, _chat_pid} ->
         {:reply, {:ok, bag}, state}
     end
   end
@@ -233,11 +255,28 @@ defmodule Game.Player do
     case find_player(state, player_name) do
       :no_player ->
         {:reply, {:error, :player_not_found}, state}
-      {^player_name, position, old_bag} ->
-        other_players = Enum.reject(state, fn({name, _, _}) -> name == player_name end)
-        {:reply, :ok, [ {player_name, position, [ item | old_bag ]} | other_players ]}
+      {^player_name, position, old_bag, chat_pid} ->
+        other_players = Enum.reject(state, fn({name, _, _, _}) -> name == player_name end)
+        {:reply, :ok, [ {player_name, position, [ item | old_bag ], chat_pid} | other_players ]}
     end
   end
 
+  def handle_call({:chat_pid, player_name}, _from, state) do
+    case find_player(state, player_name) do
+      :no_player ->
+        {:reply, {:error, :player_not_found}, state}
+      {^player_name, _position, _bag, chat_pid} ->
+        {:reply, {:ok, chat_pid}, state}
+    end
+  end
   
+  def handle_call({:set_chat_pid, player_name, pid}, _from, state) do
+    case find_player(state, player_name) do
+      :no_player ->
+        {:reply, {:error, :player_not_found}, state}
+      {^player_name, position, bag, _chat_pid} ->
+        other_players = Enum.reject(state, fn({name, _, _, _}) -> name == player_name end)
+        {:reply, :ok, [ {player_name, position, bag, pid} | other_players ]}
+    end
+  end
 end

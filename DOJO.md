@@ -42,17 +42,20 @@ Mix has provided a (small) skeleton module, in `lib/dojo.ex`.  If we want to add
 
 Create a function `Dojo.Actor.add` that takes two integer arguments and adds the result together.  As an example, a "hello world" below:
 
-    defmodule Dojo.Hello do
-      @moduledoc "Let's say hello"
-      
-      @doc """
-      Says hello to you in Swedish.
-      """
-      def se(person) do
-        "Hej #{inspect person}"
-      end
-    end
+```elixir
+defmodule Dojo.Hello do
+  @moduledoc "Let's say hello"
+  
+  @doc """
+  Says hello to you in Swedish.
+  """
+  def se(person) do
+    "Hej #{inspect person}"
+  end
+end
+```
 
+If you're coming from Ruby, don't forget the `do` on the end of the function `def`.
 Now start iex (interactive Elixir) with `iex -S mix`.  Here's the output we're expecting:
 
     iex(1)> Dojo.Actor.add(1,2)
@@ -61,54 +64,102 @@ Now start iex (interactive Elixir) with `iex -S mix`.  Here's the output we're e
 
 Exit iex with crtl+c, ctrl+c.
 
-Just as a side note, if you come from Ruby, you'll recognise the `"#{var}"` syntax.  This is how we include variables in strings.  If you've added a `@doc` to your function, try `h Dojo.Actor.add` in iex.
+Just as a side note, if you come from Ruby, you'll recognise the `"#{var}"` syntax.  This is how we include variables in strings.  Notice that we use `#{inspect person}` rather than just `#{person}`.  This is because Elixir uses a 'protocol' to give us a string representation of a term.  The `String.Chars` protocol looks like:
+
+```elixir
+import Kernel, except: [to_string: 1]
+
+defprotocol String.Chars do
+  @moduledoc ~S"""
+  The String.Chars protocol is responsible for
+  converting a structure to a Binary (only if applicable).
+  The only function required to be implemented is
+  `to_string` which does the conversion.
+
+  The `to_string` function automatically imported
+  by Kernel invokes this protocol. String
+  interpolation also invokes to_string in its
+  arguments. For example, `"foo#{bar}"` is the same
+  as `"foo" <> to_string(bar)`.
+  """
+
+  def to_string(thing)
+end
+
+defimpl String.Chars, for: Atom do
+  def to_string(nil) do
+    ""
+  end
+
+  def to_string(atom) do
+    Atom.to_string(atom)
+  end
+end
+
+# ... skip to the end ...
+
+defimpl String.Chars, for: Float do
+  def to_string(thing) do
+    IO.iodata_to_binary(:io_lib_format.fwrite_g(thing))
+  end
+end
+
+```
+
+It's what gives us polymophism in Elixir.  We can define different implementations for different types.
+
+Anyway, back to our Actor.  If you've added a `@doc` to your function, try `h Dojo.Actor.add` in iex.
 
 Don't forget to recompile your module if you make changes.  You can either quit iex with ctrl+c, ctrl+c, it'll recompile when you start iex; or you can use `r(Dojo.Actor)`.
 
 The Actor Model
 ---------------
 
-There's a reason we called our module `Actor`.  Erlang (and by extension Elixir) has a very strong actor model.  All Elixir code runs in an Elixir process.  This is a very lightweight process inside the Erlang VM, not an operating system process.  This means we don't have the usual problems with threading (locking or sharing memory).  The only way to talk to another process is to send messages.  It does seem like a good idea, there's probably an actor model in your normal language (Orleans, Akka etc).
+There's a reason we called our module `Actor`.  Erlang (and by extension Elixir) has a very strong actor model.  All Elixir code runs in a 'process'.  This is a very lightweight process inside the Erlang VM, not an operating system process.  This means we don't have the usual problems with threading (locking or sharing memory).  The only way to talk to another process is to send messages.  There's probably an actor model in your normal language (Orleans, Akka etc).
 
 One of the reasons I started looking at Erlang and Elixir was because processors aren't getting faster.  We're getting lots more cores, so we need to learn how to program in a concurrent system.  This is something that Erlang has been doing for years, and now we have a Ruby-esque language that runs on this solid VM.  Let's have a look.
 
 Here's an example from [elixir-lang.org](http://elixir-lang.org):
 
-    parent = self()
-    
-    # Spawns an Elixir process (not an operating system one!)
-    spawn_link(fn ->
-      send parent, {:msg, "hello world"}
-    end)
-    
-    # Block until the message is received
-    receive do
-      {:msg, contents} -> IO.puts contents
-    end
+```elixir
+parent = self()
 
-The `self()` call will return the current process' process ID (or PID).  We then spawn another Elixir process that's linked to our process with `spawn_link`.  What this means is that if our new child process crashes, we crash too.  Then we start blocking and wait for messages coming back to us.  If the received message matches the pattern `{:msg, contents}` (more on this later) then we'll print the output to the console.  The spawned process just sends a message back to the parent.
+# Spawns an Elixir process (not an operating system one!)
+spawn_link(fn ->
+  send parent, {:msg, "hello world"}
+end)
+
+# Block until the message is received
+receive do
+  {:msg, contents} -> IO.puts contents
+end
+```
+
+The `self()` call will return the current process' process ID (or PID).  We then spawn another Elixir process that's linked to our process with `spawn_link`.  What this means is that if our new child process crashes, we crash too.  Then we start blocking and wait for messages coming back to us.  If the received message matches the pattern `{:msg, contents}` (more on this later) then we'll print the output to the console.  'spawn_link' takes an anonymous function that just sends a message back to the parent.
 
 Add the following function to the `lib/dojo.ex` file:
 
-    defmodule Dojo do
-    
-      @doc """
-      Spawn a process to add two numbers together.
-      """
-      def actortest(x, y) do
-        pid = self()
-        spawn_link(fn ->
-          Dojo.Actor.add(x, y, pid)
-        end)
-        
-        receive do
-          {:msg, result} -> result
-        end
-      end
-    
-    end
+```elixir
+defmodule Dojo do
 
-Now create a `Dojo.Actor.add/3` function to send the result back as a message.  You'll see this syntax a lot, it just signifies the arity (number of parameters) of the function.  You can leave your `Dojo.Actor.add/2` function as it is.  Try `Dojo.Actor.actortest/2` in iex.  It even has tab complete for modules and function names.
+  @doc """
+  Spawn a process to add two numbers together.
+  """
+  def actortest(x, y) do
+    pid = self()
+    spawn_link(fn ->
+      Dojo.Actor.add(x, y, pid)
+    end)
+    
+    receive do
+      {:msg, result} -> result
+    end
+  end
+
+end
+```
+
+Now create a `Dojo.Actor.add/3` function to send the result back as a message.  You'll see this syntax a lot, it just signifies the arity (number of parameters) of the function.  You can leave your `Dojo.Actor.add/2` function as it is.  Try `Dojo.Actor.actortest/2` in iex.  Iex even has tab complete for modules and function names.
  
 Numbers, lists, tuples and maps etc
 -----------------------------------
@@ -124,9 +175,9 @@ Numbers, strings and atoms:
     iex> :hello
     :hello
 
-Atoms are the same as symbols in other languages.  Almost like a constant, but without needing to be tied to anything.
+Atoms are the same as symbols in other languages.  Almost like a constant (in those without symbols), but without needing to be tied to an integer, for example.
 
-Lists typically hold a fixed number of items (may be different types):
+Lists typically hold a variable number of items (may be different types):
 
     iex> [1,2,3, "four"]
     [1, 2, 3, "four"]
@@ -158,6 +209,7 @@ Maps are similar to hashes or dictionaries in other languages.  If the key is an
         
     iex(16)> 
 
+Also notice that the representation is similar to the list of tuples (and Ruby's hashes, for that matter).  This only happens when we use atoms as keys.
 
 The string thing
 ----------------
@@ -174,14 +226,14 @@ In Elixir, this is represented by single quotes:
     'ABC'
     iex> 
 
-As you can see, we've picked up a curious thing.  If a list can be entirely repesented in ASCII, then that's how the shell prints the list.  For the most part you don't have to worry about it because we tend to use binary strings in Elixir.
+As you can see, we've picked up a curious thing from the Erlang shell.  If a list can be entirely repesented in ASCII, then that's how the shell prints the list.  For the most part you don't have to worry about it because we tend to use binary strings in Elixir.
 
 The other representation is as a binary string.  This tends to be the most used string type in Elixir.
 
     iex> "hello"
     "hello"
 
-With Elixir's Ruby influence comes the amazing String module.  Try some of the String functions in iex (remember you can tab complete).  If you want help, just do `h String.<function name>`, for example:
+With Elixir's Ruby influence comes the String module.  Try some of the String functions in iex (remember you can tab complete).  If you want help, just do `h String.<function name>`, for example:
 
     iex> h String.upcase
 
@@ -237,31 +289,35 @@ We use this a lot in recursion, lists behave more like linked lists rather than 
 
 We can also use patten matching in function heads, ie:
 
-    defmodule Dojo.Hello do
-      @moduledoc "Let's say hello"
-      
-      @doc """
-      Says hello to you in Swedish.
-      """
-      def se("ida") do
-        "Hej Hej Ida!"
-      end
-      def se(person) do
-        "Hej #{inspect person}"
-      end
-    end
+```elixir
+defmodule Dojo.Hello do
+  @moduledoc "Let's say hello"
+  
+  @doc """
+  Says hello to you in Swedish.
+  """
+  def se("ida") do
+    "Hej Hej Ida!"
+  end
+  def se(person) do
+    "Hej #{inspect person}"
+  end
+end
+```
 
-If we don't care what a value is, we can add the pattern matching placeholder `_`, or use `_` as the start of a variable we'll never use, ie:
+If we don't care what a value is, we can use the pattern matching placeholder `_`, or use `_` as the start of a variable we'll never use, ie:
 
-    case RATM.jump do
-      {:ok, how_high} ->
-        Logger.debug fn -> "I really want to jump #{how_high}" end
-        :ok
-      {:error, reason} ->
-        {:error, reason}
-      _other ->
-        Logger.warn fn -> "Some other thing happened" end
-    end
+```elixir
+case RATM.jump do
+  {:ok, how_high} ->
+    Logger.debug fn -> "I really want to jump #{how_high}" end
+    :ok
+  {:error, reason} ->
+    {:error, reason}
+  _other ->
+    Logger.warn fn -> "Some other thing happened" end
+end
+```
         
 Modify your Actor.add/2 function to return `:snake_eyes` if both values are 1.  Falling back to normal operation if not.
 
@@ -272,18 +328,57 @@ Documentation in Elixir is a first class citizen (surprise surpirise, in a moder
 
 Add a @doc section to your "add" function, ie:
 
-    @doc ~S"""
-    My Cat goes meow.
-    """
-    def cat do
-      :meow
-    end
+```elixir
+@doc ~S"""
+My Cat goes meow.
+"""
+def cat do
+  :meow
+end
+```
 
 Now you can get some help from the shell:
 
     iex> h Enum
 
 .. will give you the `@moduledoc` from the Enum module.  Do the same for your module and function.  It uses markdown formatting.
+
+Doctests
+--------
+
+You may have noticed that a lot of inbuilt functions have examples in the documentation.  These examples can also be used as tests.  If we detect lines starting with four spaces, then `iex>`, we'll use it as a test.
+
+Here's an example of a doctest for our `cat` function above.
+
+```elixir
+defmodule Dojo do
+
+  @doc ~S"""
+  My Cat goes meow.
+  
+  Example
+  
+      iex> Dojo.cat
+      :meow
+  
+  """
+  def cat do
+    :meow
+  end
+
+end
+```
+
+Then in `test/dojo_test.ex`, we just have:
+
+```elixir
+defmodule DojoTest do
+  use ExUnit.Case, async: true
+  doctest Dojo
+end
+```
+
+.. now we can run `mix test`.  Add some doctests to your `Dojo.Actor.add/2` function.
 
 Pipe operator
 -------------
@@ -343,28 +438,30 @@ The main board is defined in the `newboard` function.  The rows and columns are 
 
 Now let's setup our supervision tree (quit iex first with ctrl+c, ctrl+c).  Your `lib/game.ex` file defines the supervisor. `mix` will have given you an empty supervisor skeleton, we need to add the following workers and a task supervisor:
 
-    defmodule Game do
-      use Application
-    
-      # See http://elixir-lang.org/docs/stable/elixir/Application.html
-      # for more information on OTP Applications
-      def start(_type, _args) do
-        import Supervisor.Spec, warn: false
-    
-        children = [
-          # Define workers and child supervisors to be supervised
-          supervisor(Task.Supervisor, [[name: Game.TaskSupervisor]]),
-          worker(Game.Board, []),
-          worker(Game.Player, []),
-          worker(Task, [Game.Listener, :acceptor, []])
-        ]
-    
-        # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
-        # for other strategies and supported options
-        opts = [strategy: :one_for_one, name: Game.Supervisor]
-        Supervisor.start_link(children, opts)
-      end
-    end
+```elixir
+defmodule Game do
+  use Application
+
+  # See http://elixir-lang.org/docs/stable/elixir/Application.html
+  # for more information on OTP Applications
+  def start(_type, _args) do
+    import Supervisor.Spec, warn: false
+
+    children = [
+      # Define workers and child supervisors to be supervised
+      supervisor(Task.Supervisor, [[name: Game.TaskSupervisor]]),
+      worker(Game.Board, []),
+      worker(Game.Player, []),
+      worker(Task, [Game.Listener, :acceptor, []])
+    ]
+
+    # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
+    # for other strategies and supported options
+    opts = [strategy: :one_for_one, name: Game.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+end
+```
 
 * lib/game/player.ex
 
@@ -380,7 +477,7 @@ Wandering around
 
 From here on in, most of our changes will be in `acceptor.ex`.  This is the process that's launched when a client connects.
 
-Telnet to port 4040 on your machine, you should be able to enter a player name and quit.
+Telnet to port 4040 on your machine, you should be able to enter a player name and type 'quit' at the `command>` prompt.
 
 Ok, our MUD isn't up to much at the moment.  Let's let our user wander about.
 
@@ -395,7 +492,7 @@ Houston?
 
 Let's try a little experiment because yes, we have a problem.  Assuming you haven't fixed it already, what happens if a player enters a command other than north, south, east, west or quit?  Oh no, our Acceptor crashes!
 
-Try this.  Connect two clients to our game, they should use different player names.  In one of the telnet windows, send a bad command and watch it crash, leave the other at the `command>` prompt.  Keep the Elixir shell running.  Now add a drop through case statement in `acceptor.ex` (have a look at the pattern matching section if you want an example).  Just display valid options, then go back into the main loop.
+Try this.  Connect two clients to our game, they should use different player names.  In one of the telnet windows, send a bad command and watch it crash, leave the other at the `command>` prompt.  Keep the Elixir shell running.  Now add a drop through case statement in `acceptor.ex` (have a look at the pattern matching section if you want an example).  Just display valid commands, then go back into the main loop.
 
 Once you've saved the file, reload the module with:
 
@@ -403,7 +500,7 @@ Once you've saved the file, reload the module with:
 
 Now you should be able to telnet back in and issue a bad command.  However, our other session is still active.  We can type 'quit' and quit normally.
 
-Hello Mike; Hello Joe!
+Hello Joe; Hello Mike!
 
 Player position
 ---------------
@@ -415,7 +512,7 @@ Look at the way that `case` uses pattern matching.  We should be able to use thi
 Other Players
 -------------
 
-Can we register more than one player in the game?  If another player's in the same room as us, we want to know who's there.  `Game.Player.at/1` will return a list of players at a position.
+Can we register more than one player in the game?  If another player's in the same room as us, we want to know who's there.  `Game.Player.at/1` will return a list of players at a position on the board.
 
 Collecting things
 -----------------
@@ -426,14 +523,14 @@ The traditional way would be something like this:
 
     {"room description"}
     .. becomes
-    {"room description", [{:apple, 5}, {:gold 1}]}
+    {"room description", [{:apple, 5}, {:gold, 1}]}
 
 Chat
 ----
 
 This is a bit trickier.
 
-If another player's in the same room as us, can we chat to the other player?  Getting messages between processes is easy, as long as you know the pid; and the other process is listening.  If you have time, I'd update the Player module to keep a PID in the player record, but for now we can just add a `{:pid, pid}` to the player's bag.
+If another player's in the same room as us, can we chat to the other player?  Getting messages between processes is easy, as long as you know the pid; and the other process is listening.
 
 
 Lots of extra stuff

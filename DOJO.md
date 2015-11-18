@@ -525,6 +525,8 @@ The traditional way would be something like this:
     .. becomes
     {"room description", [{:apple, 5}, {:gold, 1}]}
 
+The first thing to do is to format a message for the user if we come across a room with items in.  Then you could just automatically pick up the items or maybe ask the player first?  If a player picks up a duplicate item, you should update the count of the item in the players bag.  From here, it's up to you what you do with all this stuff.  Could you trade it with other players or use it for a portal to another room or some other special power.
+
 Chat
 ----
 

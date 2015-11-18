@@ -156,6 +156,22 @@ defmodule Game.Player do
   end
 
   @doc ~S"""
+  Replace the player's bag.
+
+  Example
+
+      iex> Game.Player.register("sue")
+      {:new_player, {"sue", {3, 1}, [], nil}}
+      iex> Game.Player.replace_bag("sue", [{:gold, 2}])
+      :ok
+      iex> Game.Player.bag("sue")
+      {:ok, [gold: 2]}
+  """
+  def replace_bag(player_name, term) do
+    GenServer.call(__MODULE__, {:replace_bag, player_name, term})
+  end
+
+  @doc ~S"""
   Set the pid for the chat process.
 
   Example
@@ -258,6 +274,16 @@ defmodule Game.Player do
       {^player_name, position, old_bag, chat_pid} ->
         other_players = Enum.reject(state, fn({name, _, _, _}) -> name == player_name end)
         {:reply, :ok, [ {player_name, position, [ item | old_bag ], chat_pid} | other_players ]}
+    end
+  end
+
+  def handle_call({:replace_bag, player_name, new_bag}, _from, state) do
+    case find_player(state, player_name) do
+      :no_player ->
+        {:reply, {:error, :player_not_found}, state}
+      {^player_name, position, _old_bag, chat_pid} ->
+        other_players = Enum.reject(state, fn({name, _, _, _}) -> name == player_name end)
+        {:reply, :ok, [ {player_name, position, new_bag, chat_pid} | other_players ]}
     end
   end
 

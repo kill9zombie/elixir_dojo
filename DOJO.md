@@ -44,13 +44,12 @@ Create a function `Dojo.Actor.add` that takes two integer arguments and adds the
 
 ```elixir
 defmodule Dojo.Hello do
-  @moduledoc "Let's say hello"
   
   @doc """
-  Says hello to you in Swedish.
+  Says hello to you.
   """
-  def se(person) do
-    "Hej #{inspect person}"
+  def hello(person) do
+    "Hello #{inspect person}"
   end
 end
 ```
@@ -159,7 +158,7 @@ defmodule Dojo do
 end
 ```
 
-Now create a `Dojo.Actor.add/3` function to send the result back as a message.  You'll see this syntax a lot, it just signifies the arity (number of parameters) of the function.  You can leave your `Dojo.Actor.add/2` function as it is.  Try `Dojo.Actor.actortest/2` in iex.  Iex even has tab complete for modules and function names.
+Now create a `Dojo.Actor.add/3` function to send the result back as a message.  You'll see this syntax a lot, it just signifies the arity (number of parameters) of the function.  You can leave your `Dojo.Actor.add/2` function as it is.  Try `Dojo.actortest/2` in iex.  Iex even has tab complete for modules and function names.
  
 Numbers, lists, tuples and maps etc
 -----------------------------------
@@ -291,16 +290,15 @@ We can also use patten matching in function heads, ie:
 
 ```elixir
 defmodule Dojo.Hello do
-  @moduledoc "Let's say hello"
   
   @doc """
-  Says hello to you in Swedish.
+  Says hello to you.
   """
-  def se("ida") do
-    "Hej Hej Ida!"
+  def hello("Anna") do
+    "Hey Anna, how's it going?"
   end
-  def se(person) do
-    "Hej #{inspect person}"
+  def hello(person) do
+    "Hello #{inspect person}"
   end
 end
 ```

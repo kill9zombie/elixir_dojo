@@ -55,7 +55,7 @@ end
 ```
 
 If you're coming from Ruby, don't forget the `do` on the end of the function `def`.
-Now start iex (interactive Elixir) with `iex -S mix`.  Here's the output we're expecting:
+Now start iex (interactive Elixir) with `iex -S mix` from the base of your project directory (ie, the same directory that the `mix.exs` file is in).  Here's the output we're expecting:
 
     iex(1)> Dojo.Actor.add(1,2)
     3
@@ -63,51 +63,9 @@ Now start iex (interactive Elixir) with `iex -S mix`.  Here's the output we're e
 
 Exit iex with crtl+c, ctrl+c.
 
-Just as a side note, if you come from Ruby, you'll recognise the `"#{var}"` syntax.  This is how we include variables in strings.  Notice that we use `#{inspect person}` rather than just `#{person}`.  This is because Elixir uses a 'protocol' to give us a string representation of a term.  The `String.Chars` protocol looks like:
+Just as a side note, if you come from Ruby, you'll recognise the `"#{var}"` syntax.  This is how we include variables in strings.  Notice that we use `#{inspect person}` rather than just `#{person}`.
 
-```elixir
-import Kernel, except: [to_string: 1]
-
-defprotocol String.Chars do
-  @moduledoc ~S"""
-  The String.Chars protocol is responsible for
-  converting a structure to a Binary (only if applicable).
-  The only function required to be implemented is
-  `to_string` which does the conversion.
-
-  The `to_string` function automatically imported
-  by Kernel invokes this protocol. String
-  interpolation also invokes to_string in its
-  arguments. For example, `"foo#{bar}"` is the same
-  as `"foo" <> to_string(bar)`.
-  """
-
-  def to_string(thing)
-end
-
-defimpl String.Chars, for: Atom do
-  def to_string(nil) do
-    ""
-  end
-
-  def to_string(atom) do
-    Atom.to_string(atom)
-  end
-end
-
-# ... skip to the end ...
-
-defimpl String.Chars, for: Float do
-  def to_string(thing) do
-    IO.iodata_to_binary(:io_lib_format.fwrite_g(thing))
-  end
-end
-
-```
-
-It's what gives us polymophism in Elixir.  We can define different implementations for different types.
-
-Anyway, back to our Actor.  If you've added a `@doc` to your function, try `h Dojo.Actor.add` in iex.
+If you've added a `@doc` to your function, try `h Dojo.Actor.add` in iex.
 
 Don't forget to recompile your module if you make changes.  You can either quit iex with ctrl+c, ctrl+c, it'll recompile when you start iex; or you can use `r(Dojo.Actor)`.
 

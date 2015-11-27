@@ -15,12 +15,22 @@ It can also be extended and used to do things like hook into the [Hex](http://he
 
 Create a new project with `mix new dojo` (where 'dojo' is the name of our project).
 
-Create a new module
+Create a new project
 -------------------
+
+Try this:
 
     snapper:~$ mix new dojo
     snapper:~$ cd dojo
+
+Our code goes in the `lib` directory.  If we want to add more than one module in the `Dojo` namespace, we need to create a subdirectory in `lib`.
+
+So a `dojo` directory:
+
     snapper:~/dojo$ mkdir lib/dojo
+
+You should wind up with a directory structure like this:
+
     snapper:~/dojo$ tree
     .
     ├── config
@@ -37,10 +47,11 @@ Create a new module
     4 directories, 6 files
     snapper:~/dojo$ 
 
+Mix has provided a (small) skeleton module, in `lib/dojo.ex`.  It doesn't do much at the moment. 
 
-Mix has provided a (small) skeleton module, in `lib/dojo.ex`.  If we want to add more modules to the project, we create the `lib/dojo` directory and add our modules there.  Add a module `Dojo.Actor`, it goes in the file `lib/dojo/actor.ex`.
+You'll notice that mix has created us a skeleton test too, in `test/dojo_test.exs`.  This just has one test defined that will always pass when we run `mix test`.  The `config` directory holds configuration that we can read from code, but we won't be using that in this dojo.  `mix.exs` is configuration for mix itself, we use it to pull in things like dependancies.  Again, we won't need to touch that in this dojo.
 
-Create a function `Dojo.Actor.add` that takes two integer arguments and adds the result together.  As an example, a "hello world" below:
+Create a module `Dojo.Actor`, it goes in the file `lib/dojo/actor.ex`.  Then create a function `Dojo.Actor.add` that takes two integer arguments and adds the result together.  As an example, a "hello world" below:
 
 ```elixir
 defmodule Dojo.Hello do
@@ -54,7 +65,10 @@ defmodule Dojo.Hello do
 end
 ```
 
-If you're coming from Ruby, don't forget the `do` on the end of the function `def`.
+It's worth noting that module names must start with a capital letter and function names must start with a lower case letter.  Function names tend to be lowercase letters, numbers and underscores.  We follow a similar convention to Ruby, in that functions that return true or false are named with a question mark at the end, for example: `Foo.is_odd?(5)`.
+
+If you're coming from Ruby, don't forget the `do` on the end of the function `def` (yes, I've done it; lots).
+
 Now start iex (interactive Elixir) with `iex -S mix` from the base of your project directory (ie, the same directory that the `mix.exs` file is in).  Here's the output we're expecting:
 
     iex(1)> Dojo.Actor.add(1,2)
@@ -62,8 +76,6 @@ Now start iex (interactive Elixir) with `iex -S mix` from the base of your proje
     iex(2)> 
 
 Exit iex with crtl+c, ctrl+c.
-
-Just as a side note, if you come from Ruby, you'll recognise the `"#{var}"` syntax.  This is how we include variables in strings.  Notice that we use `#{inspect person}` rather than just `#{person}`.
 
 If you've added a `@doc` to your function, try `h Dojo.Actor.add` in iex.
 

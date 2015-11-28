@@ -152,28 +152,46 @@ end
 Numbers, lists, tuples and maps etc
 -----------------------------------
 
+The interactive Elixir shell is called `iex`.  Linux or OSX users can just type `iex` from a terminal.  There's a note for Windows users that might help:
+
+Note: if you are on Windows, you can also try iex.bat --werl which may provide a better experience depending on which console you are using.
+
+To quit `iex`, there's a quite inelegant ctrl+c, ctrl+c.
+
 We can experiment with data types in iex:
 
-Numbers, strings and atoms:
+Try these:
+
+Numbers
 
     iex> 1 + 4
     5
+
+Strings
+
     iex> "jim" <> "bob"
     "jimbob"
+
+Atoms
+
     iex> :hello
     :hello
 
-Atoms are the same as symbols in other languages.  Almost like a constant (in those without symbols), but without needing to be tied to an integer, for example.
+Atoms are the same as symbols in some other languages (Ruby being one).  Almost like a constant, but without needing to be tied to an integer, for example.
 
 Lists typically hold a variable number of items (may be different types):
 
     iex> [1,2,3, "four"]
     [1, 2, 3, "four"]
 
-Tuples typically hold a fixed number of items.  It's common to see things like `{:ok, "value"}` or `{:error, reason}` returned by functions (where `reason` is a description of the problem).
+To work with lists, you typically use the `Enum` module.  I remember it because it's like the `Enumerable` mixin in Ruby, but if you come from another language I could see this being a strange one.  Have a look at the [docs](http://elixir-lang.org/docs/stable/elixir/Enum.html), just check your version if you're not running Elixir 1.1.
+
+Tuples typically hold a fixed number of items.  It's common to see things like `{:atom, "value"}`, but they can hold anything.  It's also common to see `{:ok, "value"}` or `{:error, reason}` returned by functions (where `reason` is a description of the problem).
 
     iex> {:ok, "hello"}
     {:ok, "hello"}
+    iex> {1,2,3,:moo}
+    {1, 2, 3, :moo}
 
 Because lists of tuples with the first value as an atom is so common, Elixir has a nicer way to represent this:
 

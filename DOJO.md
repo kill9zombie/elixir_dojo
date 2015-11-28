@@ -127,9 +127,28 @@ defmodule Dojo do
 
 end
 ```
+In Elixir (and Erlang) documentation, you'll see functions referred to as `Dojo.Actor.add/2`.  It's just a way of describing the `add` function in the `Dojo.Actor` module that takes two parameters.  This is referred to the arity of the function (the number of parameters it takes).
 
-Now create a `Dojo.Actor.add/3` function to send the result back as a message.  You'll see this syntax a lot, it just signifies the arity (number of parameters) of the function.  You can leave your `Dojo.Actor.add/2` function as it is.  Try `Dojo.actortest/2` in iex.  Iex even has tab complete for modules and function names.
- 
+Now create a `Dojo.Actor.add` function that takes three parameters and sends the result back as a message.  You can leave the old function as it is.  If you call `add` with three parameters, it'll use your new version.  If you call it with two parameters, it'll use your original function.  You'll see this quite a lot in the built in libraries.
+
+For example:
+
+```elixir
+defmodule Foo.Bar do
+
+  # This would be referred to as my_function/2 in the documentation.
+  def my_function(x,y) do
+    :ok
+  end
+
+  # This would be referred to as my_function/3 in the documentation.
+  def my_function(x,y,z) do
+    :ok
+  end
+
+end
+```
+
 Numbers, lists, tuples and maps etc
 -----------------------------------
 

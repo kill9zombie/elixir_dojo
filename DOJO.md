@@ -7,18 +7,20 @@ Prereqs
 * An installation of [Elixir](http://elixir-lang.org/install.html).
 * A telnet client (ie [Putty](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html) on windows or 'telnet' on linux)
 
+The default windows telnet client does still work if you enable it in Windows Features.  Local echo always used to be off by default, I don't know if that's still the case.
+
 Numbers, lists, tuples and maps etc
 -----------------------------------
 
 The Elixir interactive shell is called `iex`.  Linux or OSX users can just type `iex` from a terminal.  There's a note for Windows users that might help:
 
-Note: if you are on Windows, you can also try iex.bat --werl which may provide a better experience depending on which console you are using.
+    Note: if you are on Windows, you can also try iex.bat --werl which may provide a better experience depending on which console you are using.
 
 To quit `iex`, there's a quite inelegant ctrl+c, ctrl+c.
 
-`iex` is the REPL for Elixir, we can type in an Elixir expression and get the result.  You'll notice that even simple things like integer numbers are an expression, they just return themselves.  If you press return at the `iex` prompt, it'll evaluate to `nil`.
+`iex` is the REPL (Read, Evaluate, Print Loop) for Elixir, we can type in an Elixir expression and get the result.  You'll notice that even simple things like integer numbers are an expression, they just return themselves.  If you press return at the `iex` prompt, it'll evaluate to `nil`.
 
-In Elixir (and Erlang) documentation, you'll see functions referred to as `Dojo.Actor.add/2`.  It's just a way of describing the `add` function in the `Dojo.Actor` module that takes two parameters.  This is referred to the arity of the function (the number of parameters it takes).
+In Elixir (and Erlang) documentation, you'll see functions referred to as `Dojo.Actor.add/2`.  It's just a way of describing the `add` function in the `Dojo.Actor` module that takes two parameters.  This is referred to as the arity of the function (the number of parameters it takes).
 
 We can experiment with data types in iex:
 
@@ -279,7 +281,9 @@ Or to fetch the 3rd element in the list:
 
 You can think of a pipe as marking points where we transform data.
 
-Try using `Enum.find/3` to find 'sparks' from this L7 lineup (L7 are a band, in case you don't know them), then upcase the first character: `["gardner", "sparks", "jett", "finch", "plakas"]`
+Using this L7 lineup (L7 are a band, in case you don't know them): `["gardner", "sparks", "jett", "finch", "plakas"]`.
+
+Try to capitalize the first character of each name with `String.capitalize/1` in the anonymous function used in `Enum.map/2`, then make the list into a string, joined by " + " (look at `Enum.join/2` for that).  The pipe operator makes this kind of thing really readable.  Remember that documentation is either online http://elixir-lang.org/docs/stable/elixir/Kernel.html or in iex 'h Enum.map'.
 
 Mix
 ---
@@ -287,10 +291,10 @@ Mix
 Mix is a tool to help create Elixir projects.  It will create a skeleton project with a single passing test.
 It can also be extended and used to do things like hook into the [Hex](http://hex.pm) package management system to deal with dependancies.
 
-Create a new project with `mix new dojo` (where 'dojo' is the name of our project).
-
 Create a new project
 -------------------
+
+We can create a new project with 'mix new'.
 
 Try this:
 
@@ -421,10 +425,14 @@ defmodule Foo.Bar do
 end
 ```
 
+What happens when your run the `Dojo.actortest` function from the shell?  I know it doesn't look very exciting but it's actually passing messages between the two processes.
+
 Let's build a MUD
 -----------------
 
 Ok, let's have a go at a really basic MUD.  First create a new project with an OTP supervision tree:
+
+Don't do this in your existing 'dojo' directory, go back a directory first.  This will create a new 'game' directory.  Try this:
 
     mix new game --sup
 
@@ -538,10 +546,14 @@ Other Players
 
 We know that we can register more than one player.  Wouldn't it be nice if they knew about each other?  If another player's in the same room as us, we want to know who's there.  `Game.Player.at/1` will return a list of players at a position on the board.
 
+Try to think about how Unix command line tools work.  We take small, dedicated programs and use the pipe operator to link them together to transform the data.  That's similar to what we're doing in Elixir.  We make small functions, you could call it 'parsing' the input with pattern matching, then output some data.  We link these small functions with the pipe operator to transform data.  Or at least, that's the ideal.
+
+You already have the name of the player, so could you use that in a pattern match?
+
 Collecting things
 -----------------
 
-Players may be able to collect things as they travel about.  They certainly have a bag, check out `Game.Player.bag/1` and `Game.Player.add_to_bag/2`.  You'll notice that `Game.Board.room/1` returns a tuple with one value.  Now's the time to add things to rooms.  Update `Game.Board.newboard/0` and add some items.
+Players may be able to collect things as they travel about.  They certainly have a bag, check out `Game.Player.bag/1`, `Game.Player.add_to_bag/2` and `Game.Player.replace_bag/2`.  You'll notice that `Game.Board.room/1` returns a tuple with one value.  Now's the time to add things to rooms.  Update `Game.Board.newboard/0` and add some items.
 
 The traditional way would be something like this:
 
@@ -556,7 +568,7 @@ Chat
 
 This is a bit trickier.
 
-If another player's in the same room as us, can we chat to the other player?  Getting messages between processes is easy, as long as you know the pid; and the other process is listening.
+If another player's in the same room as us, can we chat to the other player?  Getting messages between processes is easy, as long as you know the pid; and the other process is listening.  You can get a player's chat pid with `Game.Player.chat_pid/1` and set a chat pid with `Game.Player.set_chat_pid/2`.  We already know how to send messages between processes and how to `spawn_link` a process.
 
 
 Lots of extra stuff

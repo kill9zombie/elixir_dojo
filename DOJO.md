@@ -7,14 +7,18 @@ Prereqs
 * An installation of [Elixir](http://elixir-lang.org/install.html).
 * A telnet client (ie [Putty](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html) on windows or 'telnet' on linux)
 
-The default windows telnet client does still work if you enable it in Windows Features.  Local echo always used to be off by default, I don't know if that's still the case.
+The default windows telnet client does still work if you enable it in Windows Features.  Local echo always used to be off by default, if that's still the case try something like this:
+
+    C:\> telnet
+    set localecho
+    open localhost 4040
 
 Numbers, lists, tuples and maps etc
 -----------------------------------
 
 The Elixir interactive shell is called `iex`.  Linux or OSX users can just type `iex` from a terminal.  There's a note for Windows users that might help:
 
-    Note: if you are on Windows, you can also try iex.bat --werl which may provide a better experience depending on which console you are using.
+Note: if you are on Windows, you can also try iex.bat --werl which may provide a better experience depending on which console you are using.
 
 To quit `iex`, there's a quite inelegant ctrl+c, ctrl+c.
 
@@ -22,7 +26,7 @@ To quit `iex`, there's a quite inelegant ctrl+c, ctrl+c.
 
 In Elixir (and Erlang) documentation, you'll see functions referred to as `Dojo.Actor.add/2`.  It's just a way of describing the `add` function in the `Dojo.Actor` module that takes two parameters.  This is referred to as the arity of the function (the number of parameters it takes).
 
-We can experiment with data types in iex:
+Let's experiment with data types in iex:
 
 Try these:
 
@@ -67,6 +71,8 @@ In Elixir (and Erlang) we typically add things to the head of a list, rather tha
 
 You'll see this syntax again when we start pattern matching heads and tails of lists.
 
+Try using `Enum.take_random/2` to take a random item from the `old_list` array above.  If the Elixir gods are smiling on you, you should have tab completion for modules and functions in the Elixir shell.
+
 #### Tuples
 
 Tuples typically hold a fixed number of items.  It's common to see things like `{:atom, "value"}`, but they can hold anything.  It's also common to see `{:ok, "value"}` or `{:error, reason}` returned by functions (where `reason` is a description of the problem).
@@ -87,6 +93,8 @@ Both of these are the same.
 
 Maps are similar to hashes or dictionaries in other languages.  If the key is an atom, then you can access the value with the dot notation.  It'll raise a KeyError if the key doesn't exist.
 
+Try this:
+
     iex> foo = %{:one => 1, :two => 2}
     %{one: 1, two: 2}
     iex> foo[:one]
@@ -100,7 +108,7 @@ Maps are similar to hashes or dictionaries in other languages.  If the key is an
         
     iex(16)> 
 
-Also notice that the representation is similar to the list of tuples (and Ruby's hashes, for that matter).  This only happens when we use atoms as keys.
+Also notice that the representation on the second line is similar to the list of tuples (and Ruby's hashes, for that matter).  This only happens when we use atoms as keys.
 
 The string thing
 ----------------
@@ -165,7 +173,15 @@ We can use pattern matching to match data structures too.  Try this:
     iex> tail
     [2, 3, 4]
 
-We use this a lot in recursion, lists behave more like linked lists rather than normal arrays in other languages.
+    iex> [x,y] = [10,20]
+    [10, 20]
+    iex> x
+    10
+    iex> y
+    20
+
+
+We use the `head|tail` thing a lot in recursion, lists behave more like linked lists rather than normal arrays in other languages.
 
 You can also do the same thing for other structures too.  Try picking the second value out of a tuple such as `{:jimbob, :fruitbat}`.
 
@@ -178,7 +194,7 @@ We can also pick values out from maps:
     iex> instrument
     :drums
 
-We can also use patten matching in function heads, ie:
+We use patten matching in function heads too, ie:
 
 ```elixir
 defmodule Dojo.Hello do
@@ -195,7 +211,7 @@ defmodule Dojo.Hello do
 end
 ```
 
-If we don't care what a value is, we can use the pattern matching placeholder `_`, or use `_` as the start of a variable we'll never use, ie:
+If we don't care what a value is, we can use the pattern matching placeholder `_`, or use `_` as the start of a variable we'll never use, ie (the `RATM.jump` function will return one of these tuples, or something else):
 
 ```elixir
 case RATM.jump do
@@ -228,7 +244,7 @@ def cat do
 end
 ```
 
-The `"""` quotes are how you create multi-line strings.
+The `"""` quotes are how you create multi-line strings (or 'heredocs').
 
 Now we can get some help from the shell:
 
@@ -237,7 +253,7 @@ Now we can get some help from the shell:
 Doctests
 --------
 
-You may have noticed that a lot of inbuilt functions have examples in the documentation.  These examples can also be used as tests.  If we detect lines starting with four spaces, then `iex>`, we can use it as a test.
+You may have noticed that a lot of inbuilt functions have examples in the documentation.  These examples can also be used as tests.  If the doctests system detects lines starting with four spaces, then `iex>`, we can use it as a test.
 
 Here's an example of a doctest for our `cat` function above (we'd always expect `Dojo.cat` to return the atom `:meow`).
 
@@ -271,7 +287,7 @@ For example, the documentation for Enum.reverse states:
 
     reverse(collection) 	Reverses the collection
 
-.. which means that we can pass it a collection with the pipe operator as:
+.. which means that we can pass it a list (have a look at the `Enumerable` protocol if you want to know more about the `collection` thing) with the pipe operator as:
 
     [1,2,3,4] |> Enum.reverse
 
@@ -513,18 +529,14 @@ Telnet to port 4040 on your machine, you should be able to enter a player name a
 
 Ok, our MUD isn't up to much at the moment.  Let's let our user wander about.
 
-If the user enters "north" at our direction prompt, move them north , show the new room description, then wait for another command.  Same for the other three directions (south, east and west).  You can use `Game.Player.move/2` to move the player.
-
-* tip
-
-  Don't forget you have tab complete and help in the `iex` shell.
+If the user enters "north" at our direction prompt, move them north , show the new room description, then wait for another command.  Same for the other three directions (south, east and west).  You can use `Game.Player.move/2` to move the player (`h Game.Player.move` for help in the shell).
 
 Houston?
 --------
 
 Let's try a little experiment because yes, we have a problem.  Assuming you haven't fixed it already, what happens if a player enters a command other than north, south, east, west or quit?  Oh no, our Acceptor crashes!
 
-Try this.  Connect two clients to our game, they should use different player names.  In one of the telnet windows, send a bad command and watch it crash, leave the other at the `command>` prompt.  Keep the Elixir shell running.  Now add a drop through case statement in `acceptor.ex` (have a look at the pattern matching section if you want an example).  Just display valid commands, then go back into the main loop.
+Try this.  Connect two clients to our game, they should use different player names.  In one of the telnet windows, send a bad command and watch it crash, leave the other at the `command>` prompt.  Keep the Elixir shell running.  Now add a drop through case statement in `acceptor.ex` (have a look at the pattern matching section if you want an example).  Just display the valid commands, then go back into the main loop.
 
 Once you've saved the file, reload the module with:
 
@@ -574,4 +586,12 @@ If another player's in the same room as us, can we chat to the other player?  Ge
 Lots of extra stuff
 -------------------
 
-There's a lot more to the language, such a behaviours, protocols, macros etc.  Have a look at http://elixir-lang.org for more.  Jose Valim has done a [How I Start](http://www.howistart.org/posts/elixir/1) using the game Portal as an example.  Videos from the Elixir conferences have made it to [confreaks.tv](http://confreaks.tv/tags/40).  [Phoenix](http://www.phoenixframework.org/) is a niceElixir web framework.
+There's a lot more to the language, such a behaviours, protocols, macros etc.
+
+If you want a good introduction (that's longer than this Dojo), have a look at [Getting Started](http://elixir-lang.org/getting-started/introduction.html).
+
+Dave Thomas' [Programming Elixir](https://pragprog.com/book/elixir/programming-elixir) book is very good.
+
+Jose Valim has done a [How I Start](http://www.howistart.org/posts/elixir/1) using the game Portal as an example.  Videos from the Elixir conferences have made it to [confreaks.tv](http://confreaks.tv/tags/40).  [Phoenix](http://www.phoenixframework.org/) is a niceElixir web framework.
+
+I don't know if it's just because I'm already into it, but it does seem to be gaining momentum at the moment.  Have fun.

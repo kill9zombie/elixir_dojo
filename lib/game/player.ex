@@ -223,14 +223,14 @@ defmodule Game.Player do
   end
 
   def handle_call({:register, player_name}, _from, state) do
-    {token, player_record} = case find_player(state, player_name) do
+    case find_player(state, player_name) do
       :no_player ->
-        {:new_player, {player_name, Board.start_position, [], nil}}
+        {token, player_record} = {:new_player, {player_name, Board.start_position, [], nil}}
+        {:reply, {token, player_record}, [ player_record | state ]}
       {player_name, position, bag, chat_pid} ->
-        {:player, {player_name, position, bag, chat_pid}}
+        old_player = {:player, {player_name, position, bag, chat_pid}}
+        {:reply, old_player, state }
     end
-
-    {:reply, {token, player_record}, [ player_record | state ]}
   end
 
   def handle_call({:position, player_name}, _from, state) do

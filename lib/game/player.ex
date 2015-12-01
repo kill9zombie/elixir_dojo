@@ -115,7 +115,7 @@ defmodule Game.Player do
       iex> Game.Player.register("jon")
       {:new_player, {"jon", {3, 1}, [], nil}}
       iex> Game.Player.at({3,1})
-      [{"matt", {3, 1}}, {"jon", {3, 1}}]
+      [{"matt", {3, 1}, [], nil}, {"jon", {3, 1}, [], nil}]
 
   """
   def at({row, column}) do

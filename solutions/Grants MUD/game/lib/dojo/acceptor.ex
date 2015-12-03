@@ -1,5 +1,8 @@
 defmodule Game.Acceptor do
   require Logger
+  
+  import Enum
+  
   alias Game.Player, as: Player
   alias Game.Board, as: Board
   
@@ -10,30 +13,29 @@ defmodule Game.Acceptor do
     intro(socket) |> loop
   end
 
-  defp greeting do
-    IO.ANSI.cyan <> "Welcome to Leeds Code Dojo! The Forest of Doom awaits..." <> @double_newline <> IO.ANSI.default_color
+  defp send_with_newlines(text, colour, socket) do
+    @newline <> text <> @newline |> send_text(colour, socket)
   end
-
-  defp intro(socket) do
-    :gen_tcp.send(socket, greeting())
-    :gen_tcp.send(socket, "player name: ")
-
-    {:ok, data} = :gen_tcp.recv(socket, 0)
-    Logger.debug fn -> "#{__MODULE__} received data: #{inspect data}" end
-
-    player_name = String.strip(data)
-    Logger.debug fn -> "#{__MODULE__} player name: #{inspect player_name}" end
-
-    case Player.register(player_name) do
-      {:player, {name, _, _, _}} -> :gen_tcp.send(socket, "I see you have returned, #{name}.  You poor fool!" <> @double_newline)
-      {:new_player, {name, _, _, _}} -> :gen_tcp.send(socket, "Welcome, brave #{name}!  You will not survive this day.." <> @double_newline)
-    end
-
-    {player_name, socket}
+  
+  defp send_text(text, colour, socket) do
+    text_colour_code =
+      case colour do
+        :description -> IO.ANSI.cyan
+        :info -> IO.ANSI.green
+        :question -> IO.ANSI.yellow
+        :standard -> IO.ANSI.white
+        _ -> IO.ANSI.white
+      end
+      
+    :gen_tcp.send(socket, text_colour_code <> text)
+  end
+  
+  defp receive_from_server(socket) do
+    :gen_tcp.recv(socket, 0)
   end
   
   defp list_to_string(list) do
-    list |> Enum.join @newline
+    list |> join ", "
   end
   
   defp get_name({name, _, _, _}) do 
@@ -41,7 +43,7 @@ defmodule Game.Acceptor do
   end
   
   defp list_text(list, text) do
-    @newline <> text <> @newline <> list_to_string(list) <> @double_newline
+    text <> @newline <> list_to_string(list)
   end
   
   defp list_or_nothing(list, nothing_text, something_text) do
@@ -52,30 +54,52 @@ defmodule Game.Acceptor do
   end
   
   defp display_other_players(player_name, position, socket) do
-    other_players = Player.at(position) |> Enum.map(&get_name/1) |> Enum.reject(&(&1 == player_name))
-    :gen_tcp.send(socket, other_players |> list_or_nothing("You are completely alone, your dark thoughts slowly overcoming you.", "You are surrounded by the following low-lives:"))
+    other_players = Player.at(position) |> map(&get_name/1) |> reject(&(&1 == player_name))
+    other_players |> display_items("You are completely alone, your dark thoughts slowly overcoming you.", "You are surrounded by the following low-lives:", socket)
   end
   
   defp display_bag_contents(player_name, socket) do
     {:ok, bag_contents} = Player.bag(player_name)
-    :gen_tcp.send(socket, bag_contents |> list_or_nothing("Your bag is completely empty, peasant!", "You have somehow managed to scavenge:"))
+    bag_contents |> display_items("Your bag is completely empty, peasant!", "You have somehow managed to scavenge:", socket)
   end
   
-  defp display_items(items, socket) do
-    :gen_tcp.send(socket, items |> list_or_nothing( "This pitiful place has nothing of interest!", "You root around in the dirt, and eventually uncover:"))
+  defp display_search_items(items, socket) do
+    items |> display_items("This pitiful place has nothing of interest!", "You root around in the dirt, and eventually uncover:", socket)
+  end
+  
+  defp display_items(items, nothing_text, something_text, socket) do
+    items 
+    |> list_or_nothing( nothing_text, something_text)
+    |> send_with_newlines(:info, socket)
+  end
+
+  defp intro(socket) do
+    "Welcome to Leeds Code Dojo! The Forest of Doom awaits..." |> send_with_newlines(:description, socket)
+    @newline <> "player name: " |> send_text(:question, socket)
+
+    {:ok, data} = socket |> receive_from_server()
+
+    player_name = String.strip(data)
+
+    case Player.register(player_name) do
+      {:player, {name, _, _, _}} -> "I see you have returned, #{name}.  Fool!" |> send_with_newlines(:info, socket)
+      {:new_player, {name, _, _, _}} -> "Welcome, brave #{name}!  You will not survive this day.." |> send_with_newlines(:info, socket)
+    end
+
+    {player_name, socket}
   end
   
   defp try_take(player_name, items, item, socket) do
-    case items |> Enum.member? String.to_atom(item) do
+    case items |> member? String.to_atom(item) do
       true -> 
         Player.add_to_bag(player_name, item)
-        :gen_tcp.send(socket, "You picked up #{item}.  Good for you." <> @double_newline)
+        "You picked up #{item}.  Good for you." |> send_with_newlines(:info, socket)
       false ->
-        :gen_tcp.send(socket, "There is no #{item} in the room, fool!" <> @double_newline)
+        "There is no #{item} in the room, fool!" |> send_with_newlines(:info, socket)
     end
   end
   
-  defp get_random_status() do
+  defp get_random_background() do
     ["A chill wind blows from the East.",
      "The putrid scent of rotting flesh drifts across your nostrils.",
      "A dead rat lies half-eaten on the ground.",
@@ -88,7 +112,30 @@ defmodule Game.Acceptor do
      "The bone of a previous forest wanderer cracks beneath your feet.",
      "Drops of blood spatter the surrounding foliage.",
      "An unfamiliar screech echoes in the distance, seemingly heading towards you."]
-     |> Enum.random
+     |> random
+  end
+  
+  defp handle_user_action(input) do
+    case input do
+      "quit" -> {:quit, {:send, "Coward! Leave this place and never return!"}}
+      dir when dir == "north" or dir == "east" or dir == "south" or dir == "west" -> {:continue, {:move, dir}}
+      "who" -> {:continue, {:show_players}}
+      "search" -> {:continue, {:search}}
+      "take " <> item -> {:continue, {:take, item}}
+      "bag" -> {:continue, {:bag}}
+      _ -> {:continue, {:send, "What nonsense is this? You can only: north, south, east, west, who, search, take, bag."}}
+    end
+  end
+  
+  defp handle(action, player, position, items, socket) do
+    case action do
+      {:send, text} -> text |> send_with_newlines(:info, socket)
+      {:move, direction} -> player |> Player.move(String.to_atom direction)
+      {:show_players} -> display_other_players(player, position, socket)
+      {:search} -> display_search_items(items, socket)
+      {:take, item} -> player |> try_take(items, item, socket)
+      {:bag} -> player |> display_bag_contents(socket)
+    end
   end
   
   defp loop({player_name, socket}) do
@@ -96,37 +143,19 @@ defmodule Game.Acceptor do
     {:ok, position} = Player.position(player_name)
     {:ok, {room_text, items}} = Board.room(position)
     
-    :gen_tcp.send(socket, "#{room_text}" <> @double_newline <> get_random_status() <> @double_newline <> "What will you do?> ")
-    {:ok, data} = :gen_tcp.recv(socket, 0)
+    "#{room_text}" <> @double_newline <> get_random_background() |> send_with_newlines(:description, socket)
+    
+    "What will you do?" |> send_with_newlines(:question, socket)
+    @newline <> "> " |> send_text(:question, socket)
+    "" |> send_text(:standard, socket)
+    
+    {:ok, data} = socket |> receive_from_server()
 
-    case String.strip(data) do
-      "quit" -> :gen_tcp.send(socket, @newline <> "Coward! Leave this place and never return!" <> @newline)
-      "north" -> 
-        Player.move(player_name, :north)
-        loop({player_name, socket})
-      "south" -> 
-        Player.move(player_name, :south)
-        loop({player_name, socket})
-      "east" -> 
-        Player.move(player_name, :east)
-        loop({player_name, socket})
-      "west" -> 
-        Player.move(player_name, :west)
-        loop({player_name, socket})
-      "who" -> 
-        display_other_players(player_name, position, socket)
-        loop({player_name, socket})
-      "search" -> 
-        display_items(items, socket)
-        loop({player_name, socket})
-      "take " <> item -> 
-        try_take(player_name, items, item, socket)
-        loop({player_name, socket})
-      "bag" -> 
-        display_bag_contents(player_name, socket)
-        loop({player_name, socket})
-      _ -> 
-        :gen_tcp.send(socket, "What nonsense is this? You can only say: north, south, east, west, who, search, take, bag." <> @double_newline)
+    case handle_user_action(String.strip(data)) do
+      {:quit, action} -> 
+        action |> handle(player_name, position, items, socket)
+      {:continue, action} -> 
+        action |> handle(player_name, position, items, socket)
         loop({player_name, socket})
     end
   end

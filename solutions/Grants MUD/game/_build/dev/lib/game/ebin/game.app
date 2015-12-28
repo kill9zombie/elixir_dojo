@@ -1,0 +1,9 @@
+{application,game,
+             [{registered,[]},
+              {description,"game"},
+              {applications,[kernel,stdlib,elixir,logger]},
+              {mod,{'Elixir.Game',[]}},
+              {vsn,"0.0.1"},
+              {modules,['Elixir.Game','Elixir.Game.Acceptor',
+                        'Elixir.Game.Board','Elixir.Game.Listener',
+                        'Elixir.Game.Player']}]}.

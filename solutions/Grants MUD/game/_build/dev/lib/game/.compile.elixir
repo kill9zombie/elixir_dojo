@@ -1,0 +1,31 @@
+v1.
+{<<"_build/dev/lib/game/ebin/Elixir.Game.Board.beam">>,'Elixir.Game.Board',
+ <<"lib/dojo/board.ex">>,
+ ['Elixir.Logger','Elixir.Module','Elixir.Kernel'],
+ ['Elixir.Agent','Elixir.String.Chars','Elixir.Enum',erlang],
+ [],nil}.
+{<<"_build/dev/lib/game/ebin/Elixir.Game.Player.beam">>,'Elixir.Game.Player',
+ <<"lib/dojo/player.ex">>,
+ ['Elixir.GenServer','Elixir.Module','Elixir.Kernel'],
+ ['Elixir.Enum','Elixir.Game.Board',erlang],
+ [],nil}.
+{<<"_build/dev/lib/game/ebin/Elixir.Game.Listener.beam">>,
+ 'Elixir.Game.Listener',<<"lib/dojo/listener.ex">>,
+ ['Elixir.Logger','Elixir.Application','Elixir.Module','Elixir.Kernel'],
+ ['Elixir.Game.Acceptor','Elixir.String.Chars','Elixir.Game.TaskSupervisor',
+  gen_tcp,inet,'Elixir.Task.Supervisor',erlang],
+ [],nil}.
+{<<"_build/dev/lib/game/ebin/Elixir.Game.beam">>,'Elixir.Game',
+ <<"lib/game.ex">>,
+ ['Elixir.Supervisor.Spec','Elixir.Application','Elixir.Module',
+  'Elixir.Kernel'],
+ ['Elixir.Task','Elixir.Game.Listener','Elixir.Game.Player',
+  'Elixir.Game.TaskSupervisor','Elixir.Game.Board','Elixir.Game.Supervisor',
+  'Elixir.Task.Supervisor','Elixir.Supervisor'],
+ [],nil}.
+{<<"_build/dev/lib/game/ebin/Elixir.Game.Acceptor.beam">>,
+ 'Elixir.Game.Acceptor',<<"lib/dojo/acceptor.ex">>,
+ ['Elixir.Logger','Elixir.Enum','Elixir.Module','Elixir.Kernel'],
+ ['Elixir.Game.Board','Elixir.String','Elixir.IO.ANSI','Elixir.String.Chars',
+  'Elixir.Game.Player',gen_tcp,erlang],
+ [],nil}.

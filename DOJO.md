@@ -18,7 +18,7 @@ Numbers, lists, tuples and maps etc
 
 The Elixir interactive shell is called `iex`.  Linux or OSX users can just type `iex` from a terminal.  There's a note for Windows users that might help:
 
-Note: if you are on Windows, you can also try iex.bat --werl which may provide a better experience depending on which console you are using.
+    Note: if you are on Windows, you can also try iex.bat --werl which may provide a better experience depending on which console you are using.
 
 To quit `iex`, there's a quite inelegant ctrl+c, ctrl+c.
 
@@ -227,8 +227,6 @@ case RATM.jump do
     Logger.warn fn -> "Some other thing happened" end
 end
 ```
-
-Modify your `Dojo.Actor.add/2` (the one with two parameters) function to return `:snake_eyes` if both values are 1.  Falling back to normal operation if not.
 
 Documentation
 -------------

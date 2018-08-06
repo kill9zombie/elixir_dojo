@@ -5,7 +5,7 @@ defmodule Game.Board do
   Starts a new game.
   """
   def start_link do
-    Agent.start_link(fn -> newboard end, name: __MODULE__)
+    Agent.start_link(fn -> newboard() end, name: __MODULE__)
   end
 
   @doc """

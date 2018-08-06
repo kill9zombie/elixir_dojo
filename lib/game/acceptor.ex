@@ -24,7 +24,7 @@ defmodule Game.Acceptor do
   # This is just the intro or splash banner that the user sees.
   # The String or IO.ANSI modules can be handy.
   defp greeting do
-    IO.ANSI.cyan <> "\x{232c} Welcome to Leeds Code Dojo! \x{232c}\r\n\r\n" <> IO.ANSI.default_color
+    IO.ANSI.cyan <> "\u232c Welcome to Leeds Code Dojo! \u232c\r\n\r\n" <> IO.ANSI.default_color
   end
 
   # This is the introduction, where we show the banner and register the user.

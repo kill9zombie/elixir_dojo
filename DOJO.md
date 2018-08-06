@@ -4,7 +4,7 @@ Try some Elixir!
 Prereqs
 -------
 
-* An installation of [Elixir](http://elixir-lang.org/install.html).
+* An installation of [Elixir](http://elixir-lang.org/install.html).  This guide was written for v1.4.0.
 * A telnet client (ie [Putty](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html) on windows or 'telnet' on linux)
 
 The default windows telnet client does still work if you enable it in Windows Features.  Local echo always used to be off by default, if that's still the case try something like this:
@@ -47,7 +47,7 @@ Try these:
 
 Atoms are the same as symbols in some other languages (Ruby being one).  Almost like a constant, but without needing to be tied to an integer, for example.
 
-Functions in the `Kernel` module are automatically imported (that is to say, you can just call `is_atom(:atom)` rather than `Kernel.is_atom(:atom)`.  The docs for the Kernel module are here: http://elixir-lang.org/docs/stable/elixir/Kernel.html
+Functions in the `Kernel` module are automatically imported (that is to say, you can just call `is_atom(:atom)` rather than `Kernel.is_atom(:atom)`.  The docs for the Kernel module are here: http://hexdocs.pm/elixir/1.4.0/Kernel.html
 
 Try finding the remainder of an integer division.
 
@@ -60,7 +60,7 @@ Lists typically hold a variable number of items (may be different types):
     iex> [1,2,3, "four"]
     [1, 2, 3, "four"]
 
-To work with lists, you typically use the `Enum` module.  I remember it because it's a bit like the `Enumerable` mixin in Ruby, but if you come from another language I could see this being a strange one.  Have a look at the [docs](http://elixir-lang.org/docs/stable/elixir/Enum.html), just check your version if you're not running Elixir 1.1.
+To work with lists, you typically use the `Enum` module.  I remember it because it's a bit like the `Enumerable` mixin in Ruby, but if you come from another language I could see this being a strange one.  Have a look at the [docs](http://hexdocs.pm/elixir/1.4.0/Enum.html), just check your version if you're not running Elixir 1.4.
 
 In Elixir (and Erlang) we typically add things to the head of a list, rather than pushing onto the tail (it's more expensive), the syntax looks like:
 
@@ -71,11 +71,11 @@ In Elixir (and Erlang) we typically add things to the head of a list, rather tha
 
 You'll see this syntax again when we start pattern matching heads and tails of lists.
 
-Try using `Enum.take_random/2` to take a random item from the `old_list` array above.  If the Elixir gods are smiling on you, you should have tab completion for modules and functions in the Elixir shell.
+Try using `Enum.take_random/2` to take a random item from the `old_list` array above.  If the Elixir gods are smiling on you, you should have tab completion for modules and functions in the Elixir shell.  If you'd like to see some documentation, you can run `h Enum.take_random/2` in the shell.
 
 #### Tuples
 
-Tuples typically hold a fixed number of items.  It's common to see things like `{:atom, "value"}`, but they can hold anything.  It's also common to see `{:ok, "value"}` or `{:error, reason}` returned by functions (where `reason` is a description of the problem).
+Tuples hold a fixed number of items.  It's common to see things like `{:atom, "value"}`, but they can hold anything.  It's also common to see `{:ok, "value"}` or `{:error, reason}` returned by functions (where `reason` is a description of the problem).
 
     iex> {:ok, "hello"}
     {:ok, "hello"}
@@ -87,7 +87,7 @@ Because lists of tuples with the first value as an atom is so common, Elixir has
     iex> [{:milk, 2}, {:bread, 1}]
     [milk: 2, bread: 1]
 
-Both of these are the same.
+Both of these are the same.  These are referred to as [Keyword](https://hexdocs.pm/elixir/1.4.0/Keyword.html#content) lists.
 
 #### Maps
 
@@ -105,8 +105,6 @@ Try this:
     nil
     iex> foo.three
     ** (KeyError) key :three not found in: %{one: 1, two: 2}
-        
-    iex(16)> 
 
 Also notice that the representation on the second line is similar to the list of tuples (and Ruby's hashes, for that matter).  This only happens when we use atoms as keys.
 
@@ -119,11 +117,11 @@ In Elixir, this is represented by single quotes:
 
     'abc' is the same as [10, 11, 12]
 
-    iex> 'ABC'       
+    iex> 'ABC'
     'ABC'
     iex> [65,66,67]
     'ABC'
-    iex> 
+    iex>
 
 As you can see, we've picked up a curious thing from the Erlang shell.  If a list can be entirely repesented in ASCII, then that's how the shell prints the list.  For the most part you don't have to worry about it because we tend to use binary strings in Elixir.
 
@@ -136,7 +134,7 @@ With Elixir's Ruby influence comes the String module.  Try some of the String fu
 
     iex> h String.upcase
 
-The docs for the String module are here: http://elixir-lang.org/docs/stable/elixir/String.html in case you don't have tab complete in your shell.
+The docs for the String module are here: https://hexdocs.pm/elixir/1.4.0/String.html in case you don't have tab complete in your shell.
 
 Try using `String.rjust` or `String.ljust` to justify strings.  The `\\` in the docs just signifies the default value of a parameter.  If you want to print the value out, have a look at `IO.puts`.
 
@@ -149,7 +147,7 @@ The `=` operator in Elixir is a bit different to what we're used to.  You can us
 
     iex> x = 1
     1
-    iex> x    
+    iex> x
     1
 
 .. but it's actually called the 'match operator'.  Try to think of it as a matching operation, for example:
@@ -181,13 +179,13 @@ We can use pattern matching to match data structures too.  Try this:
     20
 
 
-We use the `head|tail` thing a lot in recursion, lists behave more like linked lists rather than normal arrays in other languages.
+We use the `head|tail` thing a lot, lists are more like linked lists rather than normal arrays in other languages.
 
 You can also do the same thing for other structures too.  Try picking the second value out of a tuple such as `{:jimbob, :fruitbat}`.
 
 We can also pick values out from maps:
 
-    iex> muse = %{:dom => :drums, :chris => :bass, :matt => :lead}  
+    iex> muse = %{:dom => :drums, :chris => :bass, :matt => :lead}
     %{chris: :bass, dom: :drums, matt: :lead}
     iex> %{:dom => instrument} = muse
     %{chris: :bass, dom: :drums, matt: :lead}
@@ -196,9 +194,11 @@ We can also pick values out from maps:
 
 We use patten matching in function heads too, ie:
 
+Just look at this example, don't try this in the shell just yet.
+
 ```elixir
 defmodule Dojo.Hello do
-  
+
   @doc """
   Says hello to you.
   """
@@ -210,6 +210,15 @@ defmodule Dojo.Hello do
   end
 end
 ```
+
+If we execute this, we get:
+
+    iex> Dojo.Hello.hello("Anna")
+    "Hey Anna, how's it going?"
+    iex> Dojo.Hello.hello("Alice")
+    "Hello \"Alice\""
+    iex>
+
 
 If we don't care what a value is, we can use the pattern matching placeholder `_`, or use `_` as the start of a variable we'll never use, ie (the `RATM.jump` function will return one of these tuples, or something else):
 
@@ -231,7 +240,7 @@ end
 Documentation
 -------------
 
-We won't do it right now, but documentation in Elixir is a first class citizen (surprise surpirise, in a modern language).  We can add documentation to modules and functions with `@moduledoc` and `@doc` (it uses markdown formatting):
+We won't do it right now, but documentation in Elixir is a first class citizen.  We can add documentation to modules and functions with `@moduledoc` and `@doc` (it uses markdown formatting):
 
 ```elixir
 @doc """
@@ -260,12 +269,12 @@ defmodule Dojo do
 
   @doc """
   My Cat goes meow.
-  
-  Example
-  
+
+  ## Examples
+
       iex> Dojo.cat
       :meow
-  
+
   """
   def cat do
     :meow
@@ -274,7 +283,7 @@ defmodule Dojo do
 end
 ```
 
-We won't go into doctests right now because we've got a lot to do, but have a look at this if you get time later: http://elixir-lang.org/getting-started/mix-otp/docs-tests-and-pipelines.html#doctests
+We won't go into doctests right now because we've got a lot to do, but have a look at this if you get time later: https://elixir-lang.org/getting-started/mix-otp/docs-tests-and-with.html#doctests
 
 Pipe operator
 -------------
@@ -283,11 +292,11 @@ The pipe operator is similar to F# but it will supply the first argument to the 
 
 For example, the documentation for Enum.reverse states:
 
-    reverse(collection) 	Reverses the collection
+    reverse(collection)   Reverses the collection
 
 .. which means that we can pass it a list (have a look at the `Enumerable` protocol if you want to know more about the `collection` thing) with the pipe operator as:
 
-    [1,2,3,4] |> Enum.reverse
+    [1,2,3,4] |> Enum.reverse()
 
 Or to fetch the 3rd element in the list:
 
@@ -297,7 +306,7 @@ You can think of a pipe as marking points where we transform data.
 
 Using this L7 lineup (L7 are a band, in case you don't know them): `["gardner", "sparks", "jett", "finch", "plakas"]`.
 
-Try to capitalize the first character of each name with `String.capitalize/1` in the anonymous function used in `Enum.map/2`, then make the list into a string, joined by " + " (look at `Enum.join/2` for that).  The pipe operator makes this kind of thing really readable.  Remember that documentation is either online http://elixir-lang.org/docs/stable/elixir/Kernel.html or in iex 'h Enum.map'.
+Try to capitalize the first character of each name with `String.capitalize/1` in the anonymous function used in `Enum.map/2`, then make the list into a string, joined by " + " (look at `Enum.join/2` for that).  The pipe operator makes this kind of thing really readable.  Remember that documentation is either online https://hexdocs.pm/elixir/1.4.0/Kernel.html or in iex 'h Enum.map'.
 
 Mix
 ---
@@ -333,23 +342,23 @@ You should wind up with a directory structure like this:
     └── test
         ├── dojo_test.exs
         └── test_helper.exs
-    
-    4 directories, 6 files
-    snapper:~/dojo$ 
 
-Mix has provided a (small) module, in `lib/dojo.ex`.  It doesn't do much at the moment. 
+    4 directories, 6 files
+    snapper:~/dojo$
+
+Mix has provided a (small) module, in `lib/dojo.ex`.  It doesn't do much at the moment.
 
 You'll notice that mix has created us a test too, in `test/dojo_test.exs`.  This just has one test defined that will always pass when we run `mix test`.  The `config` directory holds configuration that we can read from code, but we won't be using that in this dojo.  `mix.exs` is configuration for mix itself, we use it to pull in things like dependancies.  Again, we won't need to touch that in this dojo.
 
 Create a module `Dojo.Actor`, it goes in the file `lib/dojo/actor.ex`.  Then create a function `Dojo.Actor.add` that takes two integer arguments and adds the result together.
 
-Modules start with a capital letter, functions are typically lowercase, underscores, numbers and ? or !.  We follow a similar convention to Ruby, in that functions that return true or false are named with a question mark at the end, for example: `Foo.is_odd?(5)`.
+Modules start with a capital letter, functions are lowercase, underscores, numbers and ? or !.  We follow a similar convention to Ruby, in that functions that return true or false are named with a question mark at the end, for example: `Foo.is_odd?(5)`.
 
 As an example, a "hello world" below:
 
 ```elixir
 defmodule Dojo.Hello do
-  
+
   @doc """
   Says hello to you.
   """
@@ -366,7 +375,7 @@ Here's the output we're expecting:
 
     iex(1)> Dojo.Actor.add(1,2)
     3
-    iex(2)> 
+    iex(2)>
 
 Exit iex with crtl+c, ctrl+c.
 
@@ -395,7 +404,7 @@ receive do
 end
 ```
 
-The `self()` call will return the current process' Elixir process ID (or PID).  We then spawn another Elixir process that's linked to our process with `spawn_link`.  What this means is that if our new child process crashes, we crash too.  Then we start blocking and wait for messages coming back to us.  If the received message matches the pattern `{:msg, contents}` then we'll print the output to the console.  'spawn_link' takes an anonymous function that just sends a message back to the parent.
+The `self()` call will return the current process' Elixir process ID (or PID).  We then spawn another Elixir process that's linked to our process with `spawn_link`.  What this means is that if our new child process crashes, we crash too.  Then we start blocking and wait for messages coming back to us.  If the received message matches the pattern `{:msg, contents}` then we'll print the output to the console.  `spawn_link` takes an anonymous function that (in this case) just sends a message back to the parent.
 
 Add the following function to the `lib/dojo.ex` file:
 
@@ -410,7 +419,7 @@ defmodule Dojo do
     spawn_link(fn ->
       Dojo.Actor.add(x, y, pid)
     end)
-    
+
     receive do
       {:msg, result} -> result
     end
@@ -420,6 +429,8 @@ end
 ```
 
 Now create a `Dojo.Actor.add` function that takes three parameters and sends the result back as a message.  You can leave the old two parameter function as it is.  If you call `add` with three parameters, it'll use your new version.  If you call it with two parameters, it'll use your original function.  You'll see this quite a lot in the built in libraries.
+
+Note that the receive block is pattern matching, so make sure you return the right thing from `Dojo.Actor.add/3`.
 
 For example:
 
@@ -441,8 +452,8 @@ end
 
 What happens when your run the `Dojo.actortest` function from the shell?  I know it doesn't look very exciting but it's actually passing messages between the two processes.
 
-Let's build a MUD
------------------
+Let's build a MUD (Multi User Dungeon) game.
+--------------------------------------------
 
 Ok, let's have a go at a really basic MUD.  First create a new project with an OTP supervision tree:
 
@@ -450,7 +461,7 @@ Don't do this in your existing 'dojo' directory, go back a directory first.  Thi
 
     mix new game --sup
 
-The first thing to do is to make a `lib/game` directory.  Grab the `*.ex` from the skeleton project, they go in your new `lib/game` directory.  
+The first thing to do is grab the `*.ex` files from the skeleton project, they go in your new `lib/game` directory.
 
 * lib/game/board.ex
 
@@ -458,16 +469,16 @@ This will represent the 2d game board.  You'll need to come up with some better 
 
     snapper$ iex -S mix
     Erlang/OTP 17 [erts-6.3] [source] [64-bit] [smp:2:2] [async-threads:10] [hipe] [kernel-poll:false]
-    
+
     Compiled lib/game/board.ex
     Compiled lib/game/acceptor.ex
     Compiled lib/game/listener.ex
     Compiled lib/game/player_position.ex
     Generated game.app
     Interactive Elixir (1.0.3) - press Ctrl+C to exit (type h() ENTER for help)
-    iex(1)> {:ok, pid} = Game.Board.start_link
+    iex(1)> {:ok, pid} = Game.Board.start_link()
     {:ok, #PID<0.114.0>}
-    iex(2)> {row, column} = Game.Board.start_position
+    iex(2)> {row, column} = Game.Board.start_position()
     {3, 1}
     iex(3)> Game.Board.room({row, column})
     
@@ -481,10 +492,10 @@ The main board is defined in the `newboard` function.  The rows and columns are 
 
 * lib/game.ex
 
-Now let's setup our supervision tree (quit iex first with ctrl+c, ctrl+c).  Your `lib/game.ex` file defines the supervisor. `mix` will have given you an empty supervisor, we need to add the following workers and a task supervisor:
+Now let's setup our supervision tree (quit iex first with ctrl+c, ctrl+c).  Your `lib/game/application.ex` file defines the main application entry point and the main supervisor. `mix` will have given you an empty supervisor, we need to add the following workers and a task supervisor:
 
 ```elixir
-defmodule Game do
+defmodule Game.Application do
   use Application
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
@@ -590,6 +601,6 @@ If you want a good introduction (that's longer than this Dojo), have a look at [
 
 Dave Thomas' [Programming Elixir](https://pragprog.com/book/elixir/programming-elixir) book is very good.
 
-Jose Valim has done a [How I Start](http://www.howistart.org/posts/elixir/1) using the game Portal as an example.  Videos from the Elixir conferences have made it to [confreaks.tv](http://confreaks.tv/tags/40).  [Phoenix](http://www.phoenixframework.org/) is a niceElixir web framework.
+Jose Valim has done a [How I Start](http://www.howistart.org/posts/elixir/1) using the game Portal as an example.  Videos from the Elixir conferences have made it to [confreaks.tv](http://confreaks.tv/tags/40).  [Phoenix](http://www.phoenixframework.org/) is a nice Elixir web framework.
 
 I don't know if it's just because I'm already into it, but it does seem to be gaining momentum at the moment.  Have fun.

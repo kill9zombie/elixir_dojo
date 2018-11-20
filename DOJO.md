@@ -4,7 +4,7 @@ Try some Elixir!
 Prereqs
 -------
 
-* An installation of [Elixir](http://elixir-lang.org/install.html).  This guide was written for v1.4.0.
+* An installation of [Elixir](http://elixir-lang.org/install.html).  This guide was written for v1.7
 * A telnet client (ie [Putty](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html) on windows or 'telnet' on linux)
 
 The default windows telnet client does still work if you enable it in Windows Features.  Local echo always used to be off by default, if that's still the case try something like this:
@@ -12,6 +12,12 @@ The default windows telnet client does still work if you enable it in Windows Fe
     C:\> telnet
     set localecho
     open localhost 4040
+
+You could also use a [docker image](https://hub.docker.com/_/elixir/) with Elixir pre-installed.  Just make sure you grab `elixir:1.7`.  For example, run with:
+
+    sudo docker run --name ex -it --rm -v "$(pwd):/code" elixir:1.7 /bin/bash
+
+Then you can edit the code with whichever editor you like on your local machine.
 
 Numbers, lists, tuples and maps etc
 -----------------------------------
@@ -60,9 +66,10 @@ Lists typically hold a variable number of items (may be different types):
     iex> [1,2,3, "four"]
     [1, 2, 3, "four"]
 
-To work with lists, you typically use the `Enum` module.  I remember it because it's a bit like the `Enumerable` mixin in Ruby, but if you come from another language I could see this being a strange one.  Have a look at the [docs](http://hexdocs.pm/elixir/1.4.0/Enum.html), just check your version if you're not running Elixir 1.4.
+To work with lists, you typically use the `Enum` module.  I remember it because it's a bit like the `Enumerable` mixin in Ruby, but if you come from another language I could see this being a strange one.  Have a look at the [Enum docs](http://hexdocs.pm/elixir/1.7.4/Enum.html#content), just check your version if you're not running Elixir 1.7.
 
-In Elixir (and Erlang) we typically add things to the head of a list, rather than pushing onto the tail (it's more expensive), the syntax looks like:
+In Elixir (and Erlang) we typically add things to the head (front) of a list, rather than pushing onto the tail. It's more expensive because this is a linked list, the syntax looks like:
+
 
     iex> old_list = [1,2,3,4]
     [1, 2, 3, 4]
@@ -87,7 +94,7 @@ Because lists of tuples with the first value as an atom is so common, Elixir has
     iex> [{:milk, 2}, {:bread, 1}]
     [milk: 2, bread: 1]
 
-Both of these are the same.  These are referred to as [Keyword](https://hexdocs.pm/elixir/1.4.0/Keyword.html#content) lists.
+Both of these are the same.  These are referred to as [Keyword](https://hexdocs.pm/elixir/1.7.4/Keyword.html#content) lists.
 
 #### Maps
 
@@ -111,7 +118,7 @@ Also notice that the representation on the second line is similar to the list of
 The string thing
 ----------------
 
-With Erlang coming from a telecoms background, string handling isn't a strong point.  Strings come in two flavours, the first is a list of ascii values.
+With Erlang coming from a telecoms background, string handling isn't a strong point.  Strings come in two flavours, the first is a list of ASCII values.
 
 In Elixir, this is represented by single quotes:
 
@@ -123,7 +130,7 @@ In Elixir, this is represented by single quotes:
     'ABC'
     iex>
 
-As you can see, we've picked up a curious thing from the Erlang shell.  If a list can be entirely repesented in ASCII, then that's how the shell prints the list.  For the most part you don't have to worry about it because we tend to use binary strings in Elixir.
+As you can see, we've picked up a curious thing from the Erlang shell.  If a list can be entirely represented in ASCII, then that's how the shell prints the list.  For the most part you don't have to worry about it because we tend to use binary strings in Elixir.
 
 The other representation is as a binary string.  This tends to be the most used string type in Elixir.
 
@@ -134,9 +141,9 @@ With Elixir's Ruby influence comes the String module.  Try some of the String fu
 
     iex> h String.upcase
 
-The docs for the String module are here: https://hexdocs.pm/elixir/1.4.0/String.html in case you don't have tab complete in your shell.
+The docs for the String module are here: https://hexdocs.pm/elixir/1.7.4/String.html#content in case you don't have tab complete in your shell.
 
-Try using `String.rjust` or `String.ljust` to justify strings.  The `\\` in the docs just signifies the default value of a parameter.  If you want to print the value out, have a look at `IO.puts`.
+Try using `String.pad_leading/3` or `String.pad_trailing/3` to justify strings.  The `\\` in the docs just signifies the default value of a parameter.  If you want to print a value out to the console, have a look at `IO.puts`.
 
 Pattern matching
 ----------------
@@ -179,9 +186,7 @@ We can use pattern matching to match data structures too.  Try this:
     20
 
 
-We use the `head|tail` thing a lot, lists are more like linked lists rather than normal arrays in other languages.
-
-You can also do the same thing for other structures too.  Try picking the second value out of a tuple such as `{:jimbob, :fruitbat}`.
+We use the `head|tail` thing a lot.  You can also do the same thing for other structures too.  Try picking the second value out of a tuple such as `{:jimbob, :fruitbat}`.
 
 We can also pick values out from maps:
 
@@ -192,7 +197,7 @@ We can also pick values out from maps:
     iex> instrument
     :drums
 
-We use patten matching in function heads too, ie:
+We use patten matching in function heads too, i.e.:
 
 Just look at this example, don't try this in the shell just yet.
 
@@ -236,6 +241,8 @@ case RATM.jump do
     Logger.warn fn -> "Some other thing happened" end
 end
 ```
+
+The reason for marking these unused variables is that compiler warnings are very useful.  Unused variables are just one of these compiler warnings that you should listen to.
 
 Documentation
 -------------
@@ -285,6 +292,11 @@ end
 
 We won't go into doctests right now because we've got a lot to do, but have a look at this if you get time later: https://elixir-lang.org/getting-started/mix-otp/docs-tests-and-with.html#doctests
 
+ExUnit
+------
+
+The default test framework is [ExUnit](https://hexdocs.pm/ex_unit/1.7.4/ExUnit.html), which now has code coverage built in!  Because of the functional nature of Elixir, you don't really have to mock that often.  It's very easy to use dependency injection without a lot of magic.
+
 Pipe operator
 -------------
 
@@ -306,13 +318,13 @@ You can think of a pipe as marking points where we transform data.
 
 Using this L7 lineup (L7 are a band, in case you don't know them): `["gardner", "sparks", "jett", "finch", "plakas"]`.
 
-Try to capitalize the first character of each name with `String.capitalize/1` in the anonymous function used in `Enum.map/2`, then make the list into a string, joined by " + " (look at `Enum.join/2` for that).  The pipe operator makes this kind of thing really readable.  Remember that documentation is either online https://hexdocs.pm/elixir/1.4.0/Kernel.html or in iex 'h Enum.map'.
+Try to capitalize the first character of each name with `String.capitalize/1` in the anonymous function used in `Enum.map/2`, then make the list into a string, joined by " + " (look at `Enum.join/2` for that).  The pipe operator makes this kind of thing really readable.  Remember that documentation is either [online](https://hexdocs.pm/elixir/1.7.4/Kernel.html#content) or in iex 'h Enum.map'.
 
 Mix
 ---
 
-Mix is a tool to help create Elixir projects.  It will create a skeleton project with a single passing test.
-It can also be extended and used to do things like hook into the [Hex](http://hex.pm) package management system to deal with dependancies.
+Mix is a tool to help create and manage Elixir projects.  It will create a skeleton project with a single passing test.
+It can also be extended and used to do things like hook into the [Hex](http://hex.pm) package management system to deal with dependencies.
 
 Create a new project
 -------------------
@@ -348,11 +360,11 @@ You should wind up with a directory structure like this:
 
 Mix has provided a (small) module, in `lib/dojo.ex`.  It doesn't do much at the moment.
 
-You'll notice that mix has created us a test too, in `test/dojo_test.exs`.  This just has one test defined that will always pass when we run `mix test`.  The `config` directory holds configuration that we can read from code, but we won't be using that in this dojo.  `mix.exs` is configuration for mix itself, we use it to pull in things like dependancies.  Again, we won't need to touch that in this dojo.
+You'll notice that mix has created us a test too, in `test/dojo_test.exs`.  This just has one test defined that will always pass when we run `mix test`.  The `config` directory holds configuration that we can read from code, but we won't be using that in this dojo.  `mix.exs` is configuration for mix itself, we use it to pull in things like dependencies.  Again, we won't need to touch that in this dojo.
 
 Create a module `Dojo.Actor`, it goes in the file `lib/dojo/actor.ex`.  Then create a function `Dojo.Actor.add` that takes two integer arguments and adds the result together.
 
-Modules start with a capital letter, functions are lowercase, underscores, numbers and ? or !.  We follow a similar convention to Ruby, in that functions that return true or false are named with a question mark at the end, for example: `Foo.is_odd?(5)`.
+Modules start with a capital letter, functions are lowercase, underscores, numbers and `?` or `!`.  We follow a similar convention to Ruby, in that functions that return true or false are named with a question mark at the end, for example: `Foo.is_odd?(5)`.
 
 As an example, a "hello world" below:
 
@@ -369,7 +381,7 @@ end
 ```
 If you're coming from Ruby, don't forget the `do` on the end of the function `def` (yes, I've done it; lots).
 
-Now start iex (interactive Elixir) with `iex -S mix` from the base of your project directory (ie, the same directory that the `mix.exs` file is in).  This will compile your code into a `beam` file for the Erlang VM, then run it interactively.  In production, you can run the VM without the shell, then connect a shell afterwards to aid debugging.
+Now start iex (interactive Elixir) with `iex -S mix` from the base of your project directory (i.e., the same directory that the `mix.exs` file is in).  This will compile your code into a `beam` file for the Erlang VM, then run it interactively.  In production, you can run the VM without the shell, then connect a shell afterwards to aid debugging.  How cool is that?
 
 Here's the output we're expecting:
 
@@ -384,7 +396,7 @@ Don't forget to recompile your module if you make changes.  You can either quit 
 The Actor Model
 ---------------
 
-There's a reason we called our module `Actor`.  Erlang (and by extension Elixir) has a very strong actor model.  All Elixir code runs in a 'process'.  This is a very lightweight process inside the Erlang VM, not an operating system process.  This means we don't have the usual problems with threading (locking or sharing memory).  The only way to talk to another process is to send messages.  There's probably an actor model in your normal language (Orleans, Akka etc).
+There's a reason we called our module `Actor`.  Erlang (and by extension Elixir) has a very strong actor model.  All Elixir code runs in a 'process'.  This is a very lightweight process inside the Erlang VM, not an operating system process.  This means we don't have the usual problems with threading (locking or sharing memory).  The only way to talk to another process is to send messages.  There's probably an actor model in your normal language (Orleans, Akka, Cellular etc).
 
 One of the reasons I started looking at Erlang and Elixir was because processors aren't getting faster.  We're getting lots more cores, so we need to learn how to program in a concurrent system.  This is something that Erlang has been doing for years, and now we have a Ruby-esque language that runs on this solid VM.  It's not magic, but it does make concurrency much easier to handle.  Let's have a look.
 
@@ -404,7 +416,7 @@ receive do
 end
 ```
 
-The `self()` call will return the current process' Elixir process ID (or PID).  We then spawn another Elixir process that's linked to our process with `spawn_link`.  What this means is that if our new child process crashes, we crash too.  Then we start blocking and wait for messages coming back to us.  If the received message matches the pattern `{:msg, contents}` then we'll print the output to the console.  `spawn_link` takes an anonymous function that (in this case) just sends a message back to the parent.
+The `self()` call will return the current process' Elixir process ID (or PID).  We then spawn another Elixir process that's linked to our process with `spawn_link`.  What this means is that if our new child process crashes, we crash too.  Then we start blocking in the `receive` block and wait for messages coming back to us.  If the received message matches the pattern `{:msg, contents}` then we'll print the output to the console.  `spawn_link` takes an anonymous function that (in this case) just sends a message back to the parent.
 
 Add the following function to the `lib/dojo.ex` file:
 
@@ -428,11 +440,11 @@ defmodule Dojo do
 end
 ```
 
-Now create a `Dojo.Actor.add` function that takes three parameters and sends the result back as a message.  You can leave the old two parameter function as it is.  If you call `add` with three parameters, it'll use your new version.  If you call it with two parameters, it'll use your original function.  You'll see this quite a lot in the built in libraries.
+Now create a `Dojo.Actor.add` function that takes three parameters `(x, y and pid)` and sends the result back as a message.  You can leave the old two parameter function as it is.  If you call `add` with three parameters, it'll use your new version.  If you call it with two parameters, it'll use your original function.  You'll see this quite a lot in the built in libraries.
 
 Note that the receive block is pattern matching, so make sure you return the right thing from `Dojo.Actor.add/3`.
 
-For example:
+A side note about arity:
 
 ```elixir
 defmodule Foo.Bar do
@@ -455,7 +467,9 @@ What happens when your run the `Dojo.actortest` function from the shell?  I know
 Let's build a MUD (Multi User Dungeon) game.
 --------------------------------------------
 
-Ok, let's have a go at a really basic MUD.  First create a new project with an OTP supervision tree:
+OK, let's have a go at a really basic MUD.  This will introduce us to some OTP (Open Telecoms Platform) concepts.  You can think of OTP in a similar way to .net and C#.  C# and F# are languages that run on the CLR, in the same way that Erlang, Elixir and Lisp Flavoured Erlang are all languages that run on the BEAM VM.  .net is a bunch of libraries that are shipped with the CLR, OTP is a bunch of libraries that are shipped with the BEAM VM.  You could implement things like GenServers yourself using `spawn`, `spawn_link` etc.  I mean you wouldn't, but you could if you wanted.
+
+First create a new project with an OTP supervision tree:
 
 Don't do this in your existing 'dojo' directory, go back a directory first.  This will create a new 'game' directory.  Try this:
 
@@ -465,7 +479,7 @@ The first thing to do is grab the `*.ex` files from the skeleton project, they g
 
 * lib/game/board.ex
 
-This will represent the 2d game board.  You'll need to come up with some better descriptions (in `Game.Board.newboard/0`), my rooms are probarbly pretty lame.  Let's try the Agent.
+This will represent the 2d game board.  You'll need to come up with some better descriptions (in `Game.Board.newboard/0`), my rooms are probably pretty lame.  Let's try the Agent.
 
     snapper$ iex -S mix
     Erlang/OTP 17 [erts-6.3] [source] [64-bit] [smp:2:2] [async-threads:10] [hipe] [kernel-poll:false]
@@ -481,10 +495,10 @@ This will represent the 2d game board.  You'll need to come up with some better 
     iex(2)> {row, column} = Game.Board.start_position()
     {3, 1}
     iex(3)> Game.Board.room({row, column})
-    
+
     22:03:21.415 [debug] Fetching row: 3 column: 1
     {:ok, "Welcome to the forest, please go north to start your journey."}
-    iex(4)> 
+    iex(4)>
 
 A #PID is a process ID.  Whenever we spawn a process or start an OTP managed process, we get a process ID.  If we want to interact with the process, we'll need to keep it.  If we're just interested in the side effects of the process, maybe not.  In this case, `Game.Board.start_link` returns `{:ok, pid}` so that it can be managed by an OTP supervisor.
 
@@ -493,6 +507,8 @@ The main board is defined in the `newboard` function.  The rows and columns are 
 * lib/game.ex
 
 Now let's setup our supervision tree (quit iex first with ctrl+c, ctrl+c).  Your `lib/game/application.ex` file defines the main application entry point and the main supervisor. `mix` will have given you an empty supervisor, we need to add the following workers and a task supervisor:
+
+TODO - update in the new child style
 
 ```elixir
 defmodule Game.Application do

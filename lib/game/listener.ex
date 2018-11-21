@@ -1,7 +1,12 @@
 defmodule Game.Listener do
+  use Task
   require Logger
 
   @port Application.get_env(:game, :port, 4040)
+
+  def start_link(_arg) do
+    Task.start_link(__MODULE__, :acceptor, [])
+  end
 
   # Basically the listener section from:
   # http://elixir-lang.org/getting-started/mix-otp/task-and-gen-tcp.html

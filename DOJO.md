@@ -17,7 +17,7 @@ You could also use a [docker image](https://hub.docker.com/_/elixir/) with Elixi
 
     sudo docker run --name ex -it --rm -v "$(pwd):/code" elixir:1.7 /bin/bash
 
-Then you can edit the code with whichever editor you like on your local machine.
+Then you can edit the code with whichever editor you like on your local machine.  You may want to install `tmux` and `vim` in the docker container.
 
 Numbers, lists, tuples and maps etc
 -----------------------------------
@@ -508,26 +508,26 @@ The main board is defined in the `newboard` function.  The rows and columns are 
 
 Now let's setup our supervision tree (quit iex first with ctrl+c, ctrl+c).  Your `lib/game/application.ex` file defines the main application entry point and the main supervisor. `mix` will have given you an empty supervisor, we need to add the following workers and a task supervisor:
 
-TODO - update in the new child style
-
 ```elixir
 defmodule Game.Application do
+  # See https://hexdocs.pm/elixir/Application.html
+  # for more information on OTP Applications
+  @moduledoc false
+
   use Application
 
-  # See http://elixir-lang.org/docs/stable/elixir/Application.html
-  # for more information on OTP Applications
   def start(_type, _args) do
-    import Supervisor.Spec, warn: false
-
+    # List all child processes to be supervised
     children = [
-      # Define workers and child supervisors to be supervised
-      supervisor(Task.Supervisor, [[name: Game.TaskSupervisor]]),
-      worker(Game.Board, []),
-      worker(Game.Player, []),
-      worker(Task, [Game.Listener, :acceptor, []])
+      # Starts a worker by calling: Game.Worker.start_link(arg)
+      # {Game.Worker, arg},
+      {Task.Supervisor, name: Game.TaskSupervisor},
+      {Game.Board, []},
+      {Game.Player, []},
+      {Game.Listener, []}
     ]
 
-    # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
+    # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Game.Supervisor]
     Supervisor.start_link(children, opts)
@@ -552,7 +552,7 @@ Until we start collecting things, all of our changes will be in `acceptor.ex`.  
 
 Telnet to port 4040 on your machine, you should be able to enter a player name and type 'quit' at the `command>` prompt.
 
-Ok, our MUD isn't up to much at the moment.  Let's let our user wander about.
+OK, our MUD isn't up to much at the moment.  Let's let our user wander about.
 
 If the user enters "north" at our direction prompt, move them north , show the new room description, then wait for another command.  Same for the other three directions (south, east and west).  You can use `Game.Player.move/2` to move the player (`h Game.Player.move` for help in the shell).
 
@@ -574,7 +574,7 @@ Hello Joe; Hello Mike!
 Player position
 ---------------
 
-Now that we know where the player is, we should be able to keep their position across sessions. The Player and Board processes are still running even when our acceptor processs isn't.  Welcome the player back if they're already registered (have a look at what `Player.register/1` returns).
+Now that we know where the player is, we should be able to keep their position across sessions. The Player and Board processes are still running even when our acceptor process isn't.  Welcome the player back if they're already registered (have a look at what `Player.register/1` returns).
 
 Look at the way that `case` uses pattern matching.  We should be able to use this to make an appropriate greeting.
 
@@ -583,7 +583,7 @@ Other Players
 
 We know that we can register more than one player.  Wouldn't it be nice if they knew about each other?  If another player's in the same room as us, we want to know who's there.  `Game.Player.at/1` will return a list of players at a position on the board.
 
-Try to think about how Unix command line tools work.  We take small, dedicated programs and use the pipe operator to link them together to transform the data.  That's similar to what we're doing in Elixir.  We make small functions, you could call it 'parsing' the input with pattern matching, then output some data.  We link these small functions with the pipe operator to transform data.  Or at least, that's the ideal.
+Try to think about how Unix command line tools work.  We take small, dedicated programs and use the pipe operator to link them together to transform the data.  That's similar to what we're doing in Elixir.  We make small functions, you could call it 'parsing' the input with pattern matching, then output some data.  We link these small functions with the pipe operator to transform data.
 
 You already have the name of the player, so could you use that in a pattern match?
 
@@ -598,7 +598,7 @@ The traditional way would be something like this:
     .. becomes
     {"room description", [{:apple, 5}, {:gold, 1}]}
 
-The first thing to do is to format a message for the user if we come across a room with items in.  Then you could just automatically pick up the items or maybe ask the player first?  If a player picks up a duplicate item, you should update the count of the item in the players bag.  From here, it's up to you what you do with all this stuff.  Could you trade it with other players or use it for a portal to another room or some other special power.
+The first thing to do is to format a message for the user if we come across a room with items in.  Then you could just automatically pick up the items or maybe ask the player first?  If a player picks up a duplicate item, you should update the count of the item in the players bag.
 
 Chat
 ----
@@ -619,4 +619,4 @@ Dave Thomas' [Programming Elixir](https://pragprog.com/book/elixir/programming-e
 
 Jose Valim has done a [How I Start](http://www.howistart.org/posts/elixir/1) using the game Portal as an example.  Videos from the Elixir conferences have made it to [confreaks.tv](http://confreaks.tv/tags/40).  [Phoenix](http://www.phoenixframework.org/) is a nice Elixir web framework.
 
-I don't know if it's just because I'm already into it, but it does seem to be gaining momentum at the moment.  Have fun.
+Have fun.

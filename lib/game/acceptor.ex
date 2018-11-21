@@ -6,7 +6,7 @@ defmodule Game.Acceptor do
   #
   # The main Elixir documentation reference is here:
   #  http://elixir-lang.org/docs.html
-  # 
+  #
   # .. just watch the version that you're using.
   #
   # There's a really good into to Elixir too (just longer than this dojo)
@@ -14,10 +14,10 @@ defmodule Game.Acceptor do
   # http://elixir-lang.org/getting-started/introduction.html
   #
   #
- 
+
   # This is our entry point, it's called by the Listener when they add us to the Task Supervisor.
   def start(socket) do
-    # From here, we'll just display the intoduction screen to the user, then go into the main loop.
+    # From here, we'll just display the introduction screen to the user, then go into the main loop.
     intro(socket) |> loop
   end
 
@@ -38,7 +38,7 @@ defmodule Game.Acceptor do
     {:ok, data} = :gen_tcp.recv(socket, 0)
     Logger.debug fn -> "#{__MODULE__} received data: #{inspect data}" end
 
-    player_name = String.strip(data)
+    player_name = String.trim(data)
     Logger.debug fn -> "#{__MODULE__} player name: #{inspect player_name}" end
     # Register the player, this will either add a new player or
     # return their existing record.  See the help with `h Game.Player.regiser`.
@@ -62,7 +62,7 @@ defmodule Game.Acceptor do
     {:ok, data} = :gen_tcp.recv(socket, 0)
     Logger.debug fn -> "#{__MODULE__} received data: #{inspect data}" end
 
-    case String.strip(data) do
+    case String.trim(data) do
       "quit" -> :gen_tcp.send(socket, "goodbye\r\n")
     end
   end

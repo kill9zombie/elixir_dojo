@@ -1,10 +1,11 @@
 defmodule Game.Board do
+  use Agent
   require Logger
 
   @doc """
   Starts a new game.
   """
-  def start_link do
+  def start_link(_args) do
     Agent.start_link(fn -> newboard() end, name: __MODULE__)
   end
 
